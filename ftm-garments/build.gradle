@@ -1,0 +1,6 @@
+dependencies {
+    pluginLibsCompile project(':framework:base')
+    pluginLibsCompile project(':framework:entity')
+    pluginLibsCompile project(':framework:service')
+    pluginLibsCompile project(':framework:minilang')
+}

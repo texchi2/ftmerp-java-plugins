@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<entitymodel xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/entitymodel.xsd">
+    
+    <title>FTM Garments Entity Model</title>
+    <description>Entity definitions for FTM Garments customizations</description>
+    <version>1.0</version>
+    
+    <entity entity-name="FtmStyleNumber" package-name="com.ftm.garments" title="FTM Style Number Entity">
+        <field name="styleNumberId" type="id"></field>
+        <field name="styleNumber" type="short-varchar"></field>
+        <field name="description" type="description"></field>
+        <field name="productCategory" type="short-varchar"></field>
+        <field name="season" type="short-varchar"></field>
+        <field name="createdDate" type="date-time"></field>
+        <field name="lastModifiedDate" type="date-time"></field>
+        <prim-key field="styleNumberId"/>
+    </entity>
+    
+</entitymodel>

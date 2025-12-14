@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<services xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/services.xsd">
+    
+    <description>FTM Garments Services</description>
+    <vendor>FTM Garments Swaziland</vendor>
+    <version>1.0</version>
+    
+    <service name="createFtmStyleNumber" default-entity-name="FtmStyleNumber" engine="entity-auto" invoke="create" auth="true">
+        <description>Create FTM Style Number</description>
+        <auto-attributes include="pk" mode="OUT" optional="false"/>
+        <auto-attributes include="nonpk" mode="IN" optional="true"/>
+    </service>
+    
+</services>

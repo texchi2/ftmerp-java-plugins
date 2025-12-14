@@ -1,0 +1,80 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+*/
+package org.apache.ofbiz.ecommerce.customer
+
+import org.apache.ofbiz.entity.GenericValue
+import org.apache.ofbiz.entity.util.EntityUtil
+import org.apache.ofbiz.party.contact.ContactHelper
+
+if (userLogin) {
+    GenericValue party = userLogin.getRelatedOne('Party', false)
+    context.partyId = party.partyId
+    if (party.partyTypeId == 'PERSON') {
+        GenericValue person = from('Person').where('partyId', party.partyId).cache().queryOne()
+        context.firstName = person.firstName
+        context.lastName = person.lastName
+    } else {
+        GenericValue group = from('PartyGroup').where('partyId', party.partyId).cache().queryOne()
+        context.firstName = group.groupName
+        context.lastName = ''
+    }
+
+    GenericValue contactMech = EntityUtil.getFirst(ContactHelper.getContactMech(party,
+            'SHIPPING_LOCATION', 'POSTAL_ADDRESS', false))
+    if (contactMech) {
+        GenericValue postalAddress = contactMech.getRelatedOne('PostalAddress', false)
+        context.with {
+            shipToContactMechId = postalAddress.contactMechId
+            shipToName = postalAddress.toName
+            shipToAttnName = postalAddress.attnName
+            shipToAddress1 = postalAddress.address1
+            shipToAddress2 = postalAddress.address2
+            shipToCity = postalAddress.city
+            shipToPostalCode = postalAddress.postalCode
+            shipToStateProvinceGeoId = postalAddress.stateProvinceGeoId
+            shipToCountryGeoId = postalAddress.countryGeoId
+        }
+        GenericValue shipToStateProvinceGeo = from('Geo').where('geoId', postalAddress.stateProvinceGeoId).queryOne()
+        if (shipToStateProvinceGeo) {
+            context.shipToStateProvinceGeo = shipToStateProvinceGeo.geoName
+        }
+        GenericValue shipToCountryProvinceGeo = from('Geo').where('geoId', postalAddress.countryGeoId).queryOne()
+        if (shipToCountryProvinceGeo) {
+            context.shipToCountryProvinceGeo = shipToCountryProvinceGeo.geoName
+        }
+    } else {
+        context.shipToContactMechId = null
+    }
+
+    GenericValue shipToContactMechList = ContactHelper.getContactMech(party, 'PHONE_SHIPPING', 'TELECOM_NUMBER', false)
+    if (shipToContactMechList) {
+        GenericValue shipToTelecomNumber = (EntityUtil.getFirst(shipToContactMechList)).getRelatedOne('TelecomNumber', false)
+        pcm = EntityUtil.getFirst(shipToTelecomNumber.getRelated('PartyContactMech', null, null, false))
+        context.shipToTelecomNumber = shipToTelecomNumber
+        context.shipToExtension = pcm.extension
+    }
+
+    GenericValue shipToFaxNumberList = ContactHelper.getContactMech(party, 'FAX_SHIPPING', 'TELECOM_NUMBER', false)
+    if (shipToFaxNumberList) {
+        GenericValue shipToFaxNumber = (EntityUtil.getFirst(shipToFaxNumberList)).getRelatedOne('TelecomNumber', false)
+        GenericValue faxPartyContactMech = EntityUtil.getFirst(shipToFaxNumber.getRelated('PartyContactMech', null, null, false))
+        context.shipToFaxNumber = shipToFaxNumber
+        context.shipToFaxExtension = faxPartyContactMech.extension
+    }
+}
