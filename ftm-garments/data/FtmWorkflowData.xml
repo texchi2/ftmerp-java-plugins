@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<entity-engine-xml>
+    <!-- Product Catalog -->
+    <Product productId="FTM-PANT-CASUAL-32X32-NAVY" productTypeId="FINISHED_GOOD">
+              <internalName>Men's Casual Pant 32W x 32L Navy Blue</internalName>
+              <primaryProductCategoryId>CASUAL_PANTS</primaryProductCategoryId>
+              <quantityUomId>ea</quantityUomId>
+              <defaultPrice>70.00</defaultPrice>
+              <currencyUomId>USD</currencyUomId>
+    </Product>
+
+                                                      <!-- BOM -->
+                                                      <ProductAssoc
+                                                                productId="FTM-PANT-CASUAL-32X32-NAVY"
+                                                                productIdTo="FTM-FABRIC-COTTON-TWILL-NAVY-60"
+                                                                productAssocTypeId="MANUF_COMPONENT"
+                                                                fromDate="2025-01-01 00:00:00"
+                                                                quantity="1.8"
+                                                                scrapFactor="1.15"
+                                                                sequenceNum="10"/>
+
+                                                      <!-- Add all other entities here -->
+</entity-engine-xml>

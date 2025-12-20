@@ -23,5 +23,5 @@ under the License.
          see: https://github.com/texchi2/ftmerp-java-project/blob/main/docs/FTM-GARMENTS-WORKFLOW-DATASET.md -->
 
     <!-- Demo data can be added here for testing -->
-    <!-- Use: ./gradlew "ofbiz --load-data readers=demo" -->
+    <!-- To load demo data use gradlew with load-data readers parameter -->
 </entity-engine-xml>
