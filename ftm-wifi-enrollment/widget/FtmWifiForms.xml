@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<forms xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-form.xsd">
+
+    <!-- ==================== FILTER FORM ==================== -->
+    <form name="FindUsersFilter" type="single"
+        target="FindAuthorizedUsers" default-map-name="parameters">
+        <field name="department" title="Department">
+            <text-find/>
+        </field>
+        <field name="vlanTier" title="WiFi Tier">
+            <drop-down allow-empty="true">
+                <option key=""      description="-- All --"/>
+                <option key="VLAN10" description="FTM-Staff (VLAN10 - Leadership/IT)"/>
+                <option key="VLAN20" description="FTM-Staff2 (VLAN20 - General Staff)"/>
+            </drop-down>
+        </field>
+        <field name="searchButton" title=" ">
+            <submit button-type="button">
+                <option description="Search"/>
+            </submit>
+        </field>
+        <field name="addNewLink" title=" ">
+            <hyperlink description="Add New User" target="EditAuthorizedUser"/>
+        </field>
+        <field name="importLink" title=" ">
+            <hyperlink description="Import from Excel" target="UploadWifiUsers"/>
+        </field>
+    </form>
+
+    <!-- ==================== USER LIST FORM ==================== -->
+    <form name="AuthorizedUserList" type="list"
+        list-name="userList"
+        odd-row-style="alternate-row"
+        default-table-style="basic-table hover-bar">
+        <actions>
+            <service service-name="getFtmAuthorizedUsers" result-map="serviceResult">
+                <field-map field-name="activeOnly" value="true"/>
+            </service>
+            <set field="userList" from-field="serviceResult.userList"/>
+        </actions>
+        <field name="employeeId"   title="Employee ID">
+            <hyperlink description="${employeeId}"
+                target="EditAuthorizedUser">
+                <parameter param-name="employeeId"/>
+            </hyperlink>
+        </field>
+        <field name="fullName"     title="Full Name">      <display/></field>
+        <field name="username"     title="Username">       <display/></field>
+        <field name="department"   title="Department">     <display/></field>
+        <field name="ftmStaffVlan10" title="WiFi Tier">
+            <display description="${ftmStaffVlan10 == 'Y' ? 'FTM-Staff (VLAN10)' : 'FTM-Staff2 (VLAN20)'}"/>
+        </field>
+        <field name="deviceQuota"  title="Device Quota">  <display/></field>
+        <field name="active"       title="Active">
+            <display description="${active == 'Y' ? 'Yes' : 'No'}"/>
+        </field>
+        <field name="editAction" title=" ">
+            <hyperlink description="Edit" target="EditAuthorizedUser">
+                <parameter param-name="employeeId"/>
+            </hyperlink>
+        </field>
+        <field name="deactivateAction" title=" ">
+            <hyperlink description="Deactivate" target="DeactivateUser"
+                confirmation="Deactivate this user? FreeRADIUS must be updated manually on pfSense.">
+                <parameter param-name="employeeId"/>
+            </hyperlink>
+        </field>
+    </form>
+
+    <!-- ==================== EDIT / ADD FORM ==================== -->
+    <form name="EditUserForm" type="single"
+        default-map-name="user">
+
+        <alt-target use-when="user == null" target="CreateAuthorizedUser"/>
+        <alt-target use-when="user != null" target="UpdateAuthorizedUser"/>
+
+        <!-- Show VLAN warning from last service call if present -->
+        <field name="vlanWarning" title=" " use-when="vlanWarning != null">
+            <display description="${vlanWarning}" style="warning-message"/>
+        </field>
+
+        <field name="employeeId" title="Employee ID *">
+            <text default-value="${user?.employeeId}"/>
+        </field>
+        <field name="fullName" title="Full Name *">
+            <text default-value="${user?.fullName}"/>
+        </field>
+        <field name="username" title="Username *">
+            <text default-value="${user?.username}"/>
+        </field>
+        <field name="department" title="Department">
+            <text default-value="${user?.department}"/>
+        </field>
+        <field name="position" title="Position">
+            <text default-value="${user?.position}"/>
+        </field>
+        <field name="deviceQuota" title="Device Quota">
+            <text default-value="${user?.deviceQuota ?: 2}"/>
+        </field>
+        <field name="ftmStaffVlan10" title="WiFi Tier">
+            <drop-down>
+                <option key="false" description="FTM-Staff2 (VLAN20 - General Staff)"/>
+                <option key="true"  description="FTM-Staff (VLAN10 - Leadership/IT)"/>
+            </drop-down>
+        </field>
+        <field name="notes" title="Notes">
+            <textarea rows="3" default-value="${user?.notes}"/>
+        </field>
+        <field name="submitButton" title=" ">
+            <submit button-type="button">
+                <option description="${user != null ? 'Update User' : 'Create User'}"/>
+            </submit>
+        </field>
+        <field name="cancelLink" title=" ">
+            <hyperlink description="Cancel" target="FindAuthorizedUsers"/>
+        </field>
+    </form>
+
+    <!-- ==================== ENROLLED DEVICES LIST (READ-ONLY) ==================== -->
+    <form name="EnrolledDevicesList" type="list"
+        list-name="enrolledDevices"
+        default-table-style="basic-table">
+        <actions>
+            <!-- Read-only from PostgreSQL via raw query in screen action -->
+        </actions>
+        <field name="deviceLabel"  title="Device Label">  <display/></field>
+        <field name="serialNumber" title="Serial Number">  <display/></field>
+        <field name="status"       title="Status">         <display/></field>
+        <field name="certSerial"   title="Cert Serial">    <display/></field>
+    </form>
+
+    <!-- ==================== EXCEL UPLOAD FORM ==================== -->
+    <form name="UploadExcelForm" type="upload"
+        target="PreviewWifiImport"
+        enctype="multipart/form-data">
+        <field name="uploadedFile" title="Excel File (.xlsx or .xls)">
+            <file/>
+        </field>
+        <field name="fileName" title=" ">
+            <hidden value="import.xlsx"/>
+        </field>
+        <field name="previewOnly" title=" ">
+            <hidden value="true"/>
+        </field>
+        <field name="previewButton" title=" ">
+            <submit button-type="button">
+                <option description="Preview Import"/>
+            </submit>
+        </field>
+    </form>
+
+    <!-- ==================== IMPORT PREVIEW TABLE ==================== -->
+    <form name="ImportPreviewTable" type="list"
+        list-name="previewList"
+        default-table-style="basic-table hover-bar">
+        <field name="action"         title="Action">
+            <display description="${action}"/>
+        </field>
+        <field name="employeeId"     title="Employee ID">   <display/></field>
+        <field name="fullName"       title="Full Name">     <display/></field>
+        <field name="username"       title="Username">      <display/></field>
+        <field name="department"     title="Department">    <display/></field>
+        <field name="ftmStaffVlan10" title="VLAN10">
+            <display description="${ftmStaffVlan10 ? 'Yes' : 'No'}"/>
+        </field>
+        <field name="deviceQuota"    title="Quota">         <display/></field>
+    </form>
+
+    <!-- Commit button below the preview table -->
+    <form name="ImportCommitForm" type="single"
+        target="CommitWifiImport">
+        <field name="uploadedFile">
+            <hidden/>
+        </field>
+        <field name="fileName">
+            <hidden/>
+        </field>
+        <field name="previewOnly" title=" ">
+            <hidden value="false"/>
+        </field>
+        <field name="commitButton" title=" ">
+            <submit button-type="button">
+                <option description="Confirm Import"/>
+            </submit>
+        </field>
+        <field name="cancelLink" title=" ">
+            <hyperlink description="Cancel" target="FindAuthorizedUsers"/>
+        </field>
+    </form>
+
+    <!-- ==================== IMPORT SUMMARY ==================== -->
+    <form name="ImportSummaryForm" type="single">
+        <field name="errorsTitle" title=" " use-when="errorList != null and !errorList.isEmpty()">
+            <display description="Errors:" style="error-message"/>
+        </field>
+        <field name="warningsTitle" title=" " use-when="warnings != null and !warnings.isEmpty()">
+            <display description="Warnings (action required):" style="warning-message"/>
+        </field>
+        <field name="backLink" title=" ">
+            <hyperlink description="Back to User List" target="FindAuthorizedUsers"/>
+        </field>
+    </form>
+
+</forms>

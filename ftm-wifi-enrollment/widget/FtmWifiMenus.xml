@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<menus xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-menu.xsd">
+
+    <!-- App bar shown at top of every FTM WiFi screen -->
+    <menu name="FtmWifiAppBar" type="simple"
+        menu-container-style="tab-bar"
+        default-menu-item-name="FindAuthorizedUsers">
+
+        <menu-item name="FindAuthorizedUsers" title="User List">
+            <link target="FindAuthorizedUsers"/>
+        </menu-item>
+        <menu-item name="EditAuthorizedUser" title="Add User">
+            <link target="EditAuthorizedUser"/>
+        </menu-item>
+        <menu-item name="UploadWifiUsers" title="Import Excel">
+            <link target="UploadWifiUsers"/>
+        </menu-item>
+
+    </menu>
+
+</menus>
