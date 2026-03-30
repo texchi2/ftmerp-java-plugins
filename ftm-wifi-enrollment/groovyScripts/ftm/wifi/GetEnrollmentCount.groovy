@@ -1,32 +1,30 @@
 // GetEnrollmentCount.groovy
-// FTM WiFi Enrollment — count enrolled devices for a given username
-// Reads from enrolled_devices table (managed by Flask portal, read-only from OFBiz)
+// FTM WiFi Enrollment — count active enrolled devices for a username
+// enrolled_devices is managed by Flask portal (read-only from OFBiz)
+
+import groovy.sql.Sql
 
 def getFtmEnrollmentCount() {
-    def ftmDelegator = org.apache.ofbiz.entity.DelegatorFactory.getDelegator("ftmEnrollment")
+    def jdbcUrl    = "jdbc:postgresql://192.168.30.3:5432/ftm_enrollment"
+    def jdbcUser   = "enrolladmin"
+    def jdbcPass   = System.getenv("FTM_ENROLLMENT_DB_PASS") ?: "ftmscep2026"
+    def jdbcDriver = "org.postgresql.Driver"
 
-    if (!parameters.username?.trim()) {
-        return error("Username is required")
-    }
+    if (!parameters.username?.trim()) return error("Username is required")
 
-    def count = 0
-    ftmDelegator.withConnection("ftmEnrollmentDataSource") { conn ->
-        def stmt = conn.prepareStatement("""
-            SELECT COUNT(*) FROM enrolled_devices ed
+    def sql = Sql.newInstance(jdbcUrl, jdbcUser, jdbcPass, jdbcDriver)
+    try {
+        def row = sql.firstRow("""
+            SELECT COUNT(*) AS cnt
+            FROM enrolled_devices ed
             JOIN authorized_users au ON au.id = ed.user_id
             WHERE au.username = ?
             AND ed.status NOT IN ('revoked', 'pending')
-        """)
-        stmt.setString(1, parameters.username.trim())
-        def rs = stmt.executeQuery()
-        if (rs.next()) {
-            count = rs.getInt(1)
-        }
-        rs.close()
-        stmt.close()
+        """, [parameters.username.trim()])
+        result.enrolledCount = row?.cnt ?: 0
+    } finally {
+        sql.close()
     }
-
-    result.enrolledCount = count
     return result
 }
 
