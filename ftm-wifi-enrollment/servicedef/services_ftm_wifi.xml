@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<services xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/services.xsd">
+
+    <description>FTM WiFi Enrollment Services</description>
+    <vendor>FTM Garments Swaziland</vendor>
+    <version>1.0</version>
+
+    <!-- ==================== READ SERVICES ==================== -->
+
+    <service name="getFtmAuthorizedUsers" engine="groovy"
+        location="component://ftm-wifi-enrollment/groovyScripts/ftm/wifi/GetAuthorizedUsers.groovy"
+        invoke="getFtmAuthorizedUsers" auth="true">
+        <description>List authorized users with optional filters</description>
+        <attribute name="department"    type="String"  mode="IN" optional="true"/>
+        <attribute name="vlanTier"      type="String"  mode="IN" optional="true"
+            description="VLAN10 or VLAN20"/>
+        <attribute name="activeOnly"    type="Boolean" mode="IN" optional="true"/>
+        <attribute name="userList"      type="List"    mode="OUT" optional="false"/>
+        <attribute name="userCount"     type="Integer" mode="OUT" optional="false"/>
+    </service>
+
+    <service name="getFtmEnrollmentCount" engine="groovy"
+        location="component://ftm-wifi-enrollment/groovyScripts/ftm/wifi/GetEnrollmentCount.groovy"
+        invoke="getFtmEnrollmentCount" auth="true">
+        <description>Count enrolled devices for a user</description>
+        <attribute name="username"      type="String"  mode="IN"  optional="false"/>
+        <attribute name="enrolledCount" type="Integer" mode="OUT" optional="false"/>
+    </service>
+
+    <!-- ==================== WRITE SERVICES ==================== -->
+
+    <service name="createFtmAuthorizedUser" engine="groovy"
+        location="component://ftm-wifi-enrollment/groovyScripts/ftm/wifi/CreateAuthorizedUser.groovy"
+        invoke="createFtmAuthorizedUser" auth="true" use-transaction="true">
+        <description>Create a new authorized WiFi user</description>
+        <attribute name="employeeId"     type="String"  mode="IN" optional="false"/>
+        <attribute name="fullName"       type="String"  mode="IN" optional="false"/>
+        <attribute name="username"       type="String"  mode="IN" optional="false"/>
+        <attribute name="department"     type="String"  mode="IN" optional="true"/>
+        <attribute name="position"       type="String"  mode="IN" optional="true"/>
+        <attribute name="deviceQuota"    type="Integer" mode="IN" optional="true"/>
+        <attribute name="ftmStaffVlan10" type="Boolean" mode="IN" optional="true"/>
+        <attribute name="notes"          type="String"  mode="IN" optional="true"/>
+        <attribute name="newId"          type="Long"    mode="OUT" optional="false"/>
+    </service>
+
+    <service name="updateFtmAuthorizedUser" engine="groovy"
+        location="component://ftm-wifi-enrollment/groovyScripts/ftm/wifi/UpdateAuthorizedUser.groovy"
+        invoke="updateFtmAuthorizedUser" auth="true" use-transaction="true">
+        <description>Update an authorized WiFi user</description>
+        <attribute name="employeeId"     type="String"  mode="IN" optional="false"/>
+        <attribute name="fullName"       type="String"  mode="IN" optional="true"/>
+        <attribute name="department"     type="String"  mode="IN" optional="true"/>
+        <attribute name="position"       type="String"  mode="IN" optional="true"/>
+        <attribute name="deviceQuota"    type="Integer" mode="IN" optional="true"/>
+        <attribute name="ftmStaffVlan10" type="Boolean" mode="IN" optional="true"/>
+        <attribute name="notes"          type="String"  mode="IN" optional="true"/>
+        <attribute name="vlanWarning"    type="String"  mode="OUT" optional="true"/>
+    </service>
+
+    <service name="deactivateFtmAuthorizedUser" engine="groovy"
+        location="component://ftm-wifi-enrollment/groovyScripts/ftm/wifi/DeactivateUser.groovy"
+        invoke="deactivateFtmAuthorizedUser" auth="true" use-transaction="true">
+        <description>Deactivate a user (set active=false)</description>
+        <attribute name="employeeId"     type="String" mode="IN"  optional="false"/>
+        <attribute name="radiusReminder" type="String" mode="OUT" optional="false"/>
+    </service>
+
+    <!-- ==================== IMPORT SERVICE ==================== -->
+
+    <service name="importFtmUsersFromExcel" engine="groovy"
+        location="component://ftm-wifi-enrollment/groovyScripts/ftm/wifi/ImportUsersFromExcel.groovy"
+        invoke="importFtmUsersFromExcel" auth="true" use-transaction="true">
+        <description>Import staff roster from Excel (.xlsx/.xls)</description>
+        <attribute name="uploadedFile"  type="java.nio.ByteBuffer" mode="IN" optional="false"/>
+        <attribute name="fileName"      type="String"  mode="IN"  optional="false"/>
+        <attribute name="previewOnly"   type="Boolean" mode="IN"  optional="true"/>
+        <attribute name="previewList"   type="List"    mode="OUT" optional="true"/>
+        <attribute name="addedCount"    type="Integer" mode="OUT" optional="true"/>
+        <attribute name="updatedCount"  type="Integer" mode="OUT" optional="true"/>
+        <attribute name="skippedCount"  type="Integer" mode="OUT" optional="true"/>
+        <attribute name="errorList"     type="List"    mode="OUT" optional="true"/>
+        <attribute name="warnings"      type="List"    mode="OUT" optional="true"/>
+    </service>
+
+</services>

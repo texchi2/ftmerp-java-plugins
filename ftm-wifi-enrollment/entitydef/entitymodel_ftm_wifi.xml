@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<entitymodel xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/entitymodel.xsd">
+
+    <title>FTM WiFi Enrollment Entity Model</title>
+    <description>Maps to external ftm_enrollment PostgreSQL database</description>
+    <copyright>FTM Garments Swaziland (PTY) LTD</copyright>
+
+    <!--
+        authorized_users table — existing, managed by Flask MDM portal.
+        table-name overrides OFBiz default naming (which would be AUTHORIZED_USERS).
+        never-cache="true" ensures OFBiz always reads fresh from PostgreSQL.
+        DO NOT add <relation> to enrolled_devices or it_admins — managed by Flask portal.
+    -->
+    <entity entity-name="FtmAuthorizedUser"
+        package-name="org.apache.ofbiz.ftm.wifi"
+        table-name="authorized_users"
+        title="FTM Authorized WiFi User"
+        never-cache="true">
+
+        <field name="id"           type="numeric"      col-name="id"/>
+        <field name="employeeId"   type="short-varchar" col-name="employee_id"/>
+        <field name="fullName"     type="name"          col-name="full_name"/>
+        <field name="username"     type="short-varchar" col-name="username"/>
+        <field name="department"   type="short-varchar" col-name="department"/>
+        <field name="position"     type="description"   col-name="position"/>
+        <field name="deviceQuota"  type="numeric"       col-name="device_quota"/>
+        <field name="ftmStaffVlan10" type="indicator"   col-name="ftm_staff_vlan10"/>
+        <field name="notes"        type="very-long"     col-name="notes"/>
+        <field name="active"       type="indicator"     col-name="active"/>
+
+        <prim-key field="id"/>
+
+    </entity>
+
+    <!--
+        ftm_wifi_audit_log table — new, created by deployment SQL script.
+        Tracks all changes made via OFBiz HR module.
+    -->
+    <entity entity-name="FtmWifiAuditLog"
+        package-name="org.apache.ofbiz.ftm.wifi"
+        table-name="ftm_wifi_audit_log"
+        title="FTM WiFi Configuration Audit Log"
+        never-cache="true">
+
+        <field name="id"          type="numeric"       col-name="id"/>
+        <field name="changedBy"   type="short-varchar" col-name="changed_by"/>
+        <field name="changedAt"   type="date-time"     col-name="changed_at"/>
+        <field name="employeeId"  type="short-varchar" col-name="employee_id"/>
+        <field name="fieldName"   type="short-varchar" col-name="field_name"/>
+        <field name="oldValue"    type="very-long"     col-name="old_value"/>
+        <field name="newValue"    type="very-long"     col-name="new_value"/>
+        <field name="action"      type="short-varchar" col-name="action"/>
+
+        <prim-key field="id"/>
+
+    </entity>
+
+</entitymodel>

@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<site-conf xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/site-conf.xsd">
+
+    <include location="component://common/webapp/common/WEB-INF/common-controller.xml"/>
+
+    <description>FTM WiFi Enrollment Controller</description>
+    <owner>FTM Garments Swaziland</owner>
+
+    <!-- ==================== VIEWS ==================== -->
+
+    <view-map name="main"              type="screen"
+        page="component://ftm-wifi-enrollment/widget/FtmWifiScreens.xml#FindAuthorizedUsers"/>
+    <view-map name="FindAuthorizedUsers" type="screen"
+        page="component://ftm-wifi-enrollment/widget/FtmWifiScreens.xml#FindAuthorizedUsers"/>
+    <view-map name="EditAuthorizedUser"  type="screen"
+        page="component://ftm-wifi-enrollment/widget/FtmWifiScreens.xml#EditAuthorizedUser"/>
+    <view-map name="ImportWifiUsers"     type="screen"
+        page="component://ftm-wifi-enrollment/widget/FtmWifiScreens.xml#ImportWifiUsers"/>
+    <view-map name="ImportPreview"       type="screen"
+        page="component://ftm-wifi-enrollment/widget/FtmWifiScreens.xml#ImportPreview"/>
+    <view-map name="ImportSummary"       type="screen"
+        page="component://ftm-wifi-enrollment/widget/FtmWifiScreens.xml#ImportSummary"/>
+
+    <!-- ==================== REQUESTS ==================== -->
+
+    <!-- List view -->
+    <request-map uri="FindAuthorizedUsers">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="FindAuthorizedUsers"/>
+    </request-map>
+
+    <!-- Add/Edit form view -->
+    <request-map uri="EditAuthorizedUser">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="EditAuthorizedUser"/>
+    </request-map>
+
+    <!-- Create user -->
+    <request-map uri="CreateAuthorizedUser">
+        <security https="true" auth="true"/>
+        <event type="service" invoke="createFtmAuthorizedUser"/>
+        <response name="success" type="request-redirect" value="FindAuthorizedUsers"/>
+        <response name="error"   type="view"             value="EditAuthorizedUser"/>
+    </request-map>
+
+    <!-- Update user -->
+    <request-map uri="UpdateAuthorizedUser">
+        <security https="true" auth="true"/>
+        <event type="service" invoke="updateFtmAuthorizedUser"/>
+        <response name="success" type="request-redirect" value="FindAuthorizedUsers"/>
+        <response name="error"   type="view"             value="EditAuthorizedUser"/>
+    </request-map>
+
+    <!-- Deactivate user -->
+    <request-map uri="DeactivateUser">
+        <security https="true" auth="true"/>
+        <event type="service" invoke="deactivateFtmAuthorizedUser"/>
+        <response name="success" type="request-redirect" value="FindAuthorizedUsers"/>
+        <response name="error"   type="view"             value="FindAuthorizedUsers"/>
+    </request-map>
+
+    <!-- Excel import — upload form -->
+    <request-map uri="UploadWifiUsers">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="ImportWifiUsers"/>
+    </request-map>
+
+    <!-- Excel import — preview (previewOnly=true) -->
+    <request-map uri="PreviewWifiImport">
+        <security https="true" auth="true"/>
+        <event type="service" invoke="importFtmUsersFromExcel"/>
+        <response name="success" type="view"  value="ImportPreview"/>
+        <response name="error"   type="view"  value="ImportWifiUsers"/>
+    </request-map>
+
+    <!-- Excel import — commit (previewOnly=false) -->
+    <request-map uri="CommitWifiImport">
+        <security https="true" auth="true"/>
+        <event type="service" invoke="importFtmUsersFromExcel"/>
+        <response name="success" type="view"  value="ImportSummary"/>
+        <response name="error"   type="view"  value="ImportPreview"/>
+    </request-map>
+
+</site-conf>

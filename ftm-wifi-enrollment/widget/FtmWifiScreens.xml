@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<screens xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-screen.xsd">
+
+    <!-- Main decorator -->
+    <screen name="main-decorator">
+        <section>
+            <widgets>
+                <decorator-screen name="main-decorator"
+                    location="component://common/widget/CommonScreens.xml">
+                    <decorator-section name="pre-body">
+                        <include-menu name="FtmWifiAppBar"
+                            location="component://ftm-wifi-enrollment/widget/FtmWifiMenus.xml"/>
+                    </decorator-section>
+                    <decorator-section name="body">
+                        <decorator-section-include name="body"/>
+                    </decorator-section>
+                </decorator-screen>
+            </widgets>
+        </section>
+    </screen>
+
+    <!-- ==================== FIND / LIST SCREEN ==================== -->
+    <screen name="FindAuthorizedUsers">
+        <section>
+            <actions>
+                <service service-name="getFtmAuthorizedUsers" result-map="serviceResult">
+                    <field-map field-name="department"  from-field="parameters.department"/>
+                    <field-map field-name="vlanTier"    from-field="parameters.vlanTier"/>
+                    <field-map field-name="activeOnly"  value="true"/>
+                </service>
+                <set field="userList"  from-field="serviceResult.userList"/>
+                <set field="userCount" from-field="serviceResult.userCount"/>
+            </actions>
+            <widgets>
+                <decorator-screen name="main-decorator">
+                    <decorator-section name="body">
+                        <screenlet title="WiFi Authorized Users (${userCount} total)">
+                            <include-form name="FindUsersFilter"
+                                location="component://ftm-wifi-enrollment/widget/FtmWifiForms.xml"/>
+                        </screenlet>
+                        <screenlet title="User List">
+                            <include-form name="AuthorizedUserList"
+                                location="component://ftm-wifi-enrollment/widget/FtmWifiForms.xml"/>
+                        </screenlet>
+                    </decorator-section>
+                </decorator-screen>
+            </widgets>
+        </section>
+    </screen>
+
+    <!-- ==================== EDIT SCREEN ==================== -->
+    <screen name="EditAuthorizedUser">
+        <section>
+            <actions>
+                <set field="employeeId" from-field="parameters.employeeId"/>
+                <entity-and entity-name="FtmAuthorizedUser" list="userList"
+                    delegator-name="ftmEnrollment">
+                    <field-map field-name="employeeId" from-field="employeeId"/>
+                </entity-and>
+                <set field="user" from-field="userList[0]"/>
+                <set field="titleProperty"
+                    value="${user?.fullName ? 'Edit User: ' + user.fullName : 'Add New User'}"/>
+            </actions>
+            <widgets>
+                <decorator-screen name="main-decorator">
+                    <decorator-section name="body">
+                        <screenlet title="${titleProperty}">
+                            <include-form name="EditUserForm"
+                                location="component://ftm-wifi-enrollment/widget/FtmWifiForms.xml"/>
+                        </screenlet>
+                        <screenlet title="Enrolled Devices" condition="user != null">
+                            <include-form name="EnrolledDevicesList"
+                                location="component://ftm-wifi-enrollment/widget/FtmWifiForms.xml"/>
+                        </screenlet>
+                    </decorator-section>
+                </decorator-screen>
+            </widgets>
+        </section>
+    </screen>
+
+    <!-- ==================== IMPORT SCREENS ==================== -->
+    <screen name="ImportWifiUsers">
+        <section>
+            <widgets>
+                <decorator-screen name="main-decorator">
+                    <decorator-section name="body">
+                        <screenlet title="Import Staff from Excel">
+                            <include-form name="UploadExcelForm"
+                                location="component://ftm-wifi-enrollment/widget/FtmWifiForms.xml"/>
+                            <label style="heading">
+                                Excel columns: Employee ID | Full Name | Username | Department |
+                                Position | Device Quota | FTM-Staff VLAN10 (Y/N) | Notes
+                            </label>
+                        </screenlet>
+                    </decorator-section>
+                </decorator-screen>
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="ImportPreview">
+        <section>
+            <actions>
+                <set field="previewList"  from-field="serviceResult.previewList"/>
+                <set field="errorList"    from-field="serviceResult.errorList"/>
+                <set field="warnings"     from-field="serviceResult.warnings"/>
+            </actions>
+            <widgets>
+                <decorator-screen name="main-decorator">
+                    <decorator-section name="body">
+                        <screenlet title="Import Preview — Review Before Committing">
+                            <include-form name="ImportPreviewTable"
+                                location="component://ftm-wifi-enrollment/widget/FtmWifiForms.xml"/>
+                        </screenlet>
+                    </decorator-section>
+                </decorator-screen>
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="ImportSummary">
+        <section>
+            <actions>
+                <set field="addedCount"   from-field="serviceResult.addedCount"/>
+                <set field="updatedCount" from-field="serviceResult.updatedCount"/>
+                <set field="skippedCount" from-field="serviceResult.skippedCount"/>
+                <set field="errorList"    from-field="serviceResult.errorList"/>
+                <set field="warnings"     from-field="serviceResult.warnings"/>
+            </actions>
+            <widgets>
+                <decorator-screen name="main-decorator">
+                    <decorator-section name="body">
+                        <screenlet title="Import Complete">
+                            <label>Added: ${addedCount} | Updated: ${updatedCount} | Skipped: ${skippedCount}</label>
+                            <include-form name="ImportSummaryForm"
+                                location="component://ftm-wifi-enrollment/widget/FtmWifiForms.xml"/>
+                        </screenlet>
+                    </decorator-section>
+                </decorator-screen>
+            </widgets>
+        </section>
+    </screen>
+
+</screens>

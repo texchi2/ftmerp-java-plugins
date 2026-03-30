@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    FTM WiFi Enrollment - entityengine.xml PATCH
+    =============================================
+    ADD these two blocks to /home/texchi/ofbiz/framework/entity/config/entityengine.xml
+
+    LOCATION 1: Add the delegator after the existing "default" delegator block.
+    LOCATION 2: Add the datasource after the existing PostgreSQL datasource block.
+
+    DO NOT replace the entire entityengine.xml — only add these two snippets.
+-->
+
+<!-- ============================================================
+     PASTE BLOCK 1: after the closing </delegator> of "default"
+     ============================================================ -->
+<delegator name="ftmEnrollment"
+    entity-model-reader="main"
+    entity-group-reader="main"
+    entity-eca-reader="main">
+    <group-map group-name="ftmEnrollment" datasource-name="ftmEnrollmentDataSource"/>
+</delegator>
+
+<!-- ============================================================
+     PASTE BLOCK 2: after the last existing <datasource .../> block
+     ============================================================ -->
+<datasource name="ftmEnrollmentDataSource"
+    helper-class="org.apache.ofbiz.entity.datasource.GenericHelperDAO"
+    field-type-name="postgres"
+    check-on-start="false"
+    add-missing-on-start="false"
+    use-foreign-keys="false"
+    use-foreign-key-indices="false"
+    use-pk-constraint-names="false"
+    use-indices="false"
+    join-style="ansi"
+    alias-view-columns="false">
+    <inline-jdbc
+        jdbc-driver="org.postgresql.Driver"
+        jdbc-uri="jdbc:postgresql://192.168.30.3:5432/ftm_enrollment"
+        jdbc-username="enrolladmin"
+        jdbc-password="ENROLLADMIN_PASS"
+        isolation-level="ReadCommitted"
+        pool-minsize="2"
+        pool-maxsize="10"
+        time-between-eviction-runs-millis="600000"/>
+</datasource>
+
+<!--
+    NOTE: Replace ENROLLADMIN_PASS with the actual password.
+    The postgres driver (postgresql-*.jar) is already on the OFBiz classpath
+    when running with PostgreSQL. Verify with:
+        ls /home/texchi/ofbiz/framework/entity/lib/jdbc/postgresql-*.jar
+-->
