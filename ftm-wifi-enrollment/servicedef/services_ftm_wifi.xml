@@ -10,7 +10,7 @@
 
     <service name="getFtmAuthorizedUsers" engine="groovy"
         location="component://ftm-wifi-enrollment/groovyScripts/ftm/wifi/GetAuthorizedUsers.groovy"
-        invoke="getFtmAuthorizedUsers" auth="true">
+        invoke="getFtmAuthorizedUsers" auth="false">
         <description>List authorized users with optional filters</description>
         <attribute name="department"    type="String"  mode="IN" optional="true"/>
         <attribute name="vlanTier"      type="String"  mode="IN" optional="true"

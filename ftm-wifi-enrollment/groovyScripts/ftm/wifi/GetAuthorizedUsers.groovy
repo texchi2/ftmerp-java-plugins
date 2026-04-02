@@ -54,9 +54,7 @@ def getFtmAuthorizedUsers() {
         sql.close()
     }
 
-    result.userList  = userList
-    result.userCount = userList.size()
-    return result
+    return success([userList: userList, userCount: userList.size()])
 }
 
 return getFtmAuthorizedUsers()
