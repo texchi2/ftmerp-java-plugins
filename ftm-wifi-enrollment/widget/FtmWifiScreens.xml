@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <screens xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns="http://ofbiz.apache.org/Widget-Screen"
     xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-screen.xsd">
 
     <!-- Main decorator -->
@@ -7,7 +8,7 @@
         <section>
             <widgets>
                 <decorator-screen name="main-decorator"
-                    location="component://common/widget/CommonScreens.xml">
+                    location="${parameters.mainDecoratorLocation}">
                     <decorator-section name="pre-body">
                         <include-menu name="FtmWifiAppBar"
                             location="component://ftm-wifi-enrollment/widget/FtmWifiMenus.xml"/>
@@ -33,7 +34,7 @@
                 <set field="userCount" from-field="serviceResult.userCount"/>
             </actions>
             <widgets>
-                <decorator-screen name="main-decorator">
+                <decorator-screen name="main-decorator" location="${parameters.mainDecoratorLocation}">
                     <decorator-section name="body">
                         <screenlet title="WiFi Authorized Users (${userCount} total)">
                             <include-form name="FindUsersFilter"
@@ -63,7 +64,7 @@
                     value="${user?.fullName ? 'Edit User: ' + user.fullName : 'Add New User'}"/>
             </actions>
             <widgets>
-                <decorator-screen name="main-decorator">
+                <decorator-screen name="main-decorator" location="${parameters.mainDecoratorLocation}">
                     <decorator-section name="body">
                         <screenlet title="${titleProperty}">
                             <include-form name="EditUserForm"
@@ -83,7 +84,7 @@
     <screen name="ImportWifiUsers">
         <section>
             <widgets>
-                <decorator-screen name="main-decorator">
+                <decorator-screen name="main-decorator" location="${parameters.mainDecoratorLocation}">
                     <decorator-section name="body">
                         <screenlet title="Import Staff from Excel">
                             <include-form name="UploadExcelForm"
@@ -107,7 +108,7 @@
                 <set field="warnings"     from-field="serviceResult.warnings"/>
             </actions>
             <widgets>
-                <decorator-screen name="main-decorator">
+                <decorator-screen name="main-decorator" location="${parameters.mainDecoratorLocation}">
                     <decorator-section name="body">
                         <screenlet title="Import Preview — Review Before Committing">
                             <include-form name="ImportPreviewTable"
@@ -129,7 +130,7 @@
                 <set field="warnings"     from-field="serviceResult.warnings"/>
             </actions>
             <widgets>
-                <decorator-screen name="main-decorator">
+                <decorator-screen name="main-decorator" location="${parameters.mainDecoratorLocation}">
                     <decorator-section name="body">
                         <screenlet title="Import Complete">
                             <label>Added: ${addedCount} | Updated: ${updatedCount} | Skipped: ${skippedCount}</label>

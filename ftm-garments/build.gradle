@@ -1,1 +1,11 @@
-
+dependencies {
+    pluginLibsCompile project(':framework:base')
+    pluginLibsCompile project(':framework:entity')
+    pluginLibsCompile project(':framework:service')
+    pluginLibsCompile project(':framework:security')
+    pluginLibsCompile project(':applications:product')
+    pluginLibsCompile project(':applications:order')
+    pluginLibsCompile project(':applications:manufacturing')
+    pluginLibsCompile project(':applications:accounting')
+    pluginLibsCompile project(':applications:party')
+}

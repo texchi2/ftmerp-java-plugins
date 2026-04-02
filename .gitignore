@@ -1,3 +1,23 @@
 .DS_Store
 bin/
 node_modules/
+# Symlink duplicates created by OFBiz build
+assetmaint/assetmaint
+bi/bi
+birt/birt
+cmssite/cmssite
+docs/docs
+ebay/ebay
+ebaystore/ebaystore
+ecommerce/ecommerce
+example/example
+firstdatapaymentgateway/firstdatapaymentgateway
+lucene/lucene
+msggateway/msggateway
+multiflex/multiflex
+myportal/myportal
+passport/passport
+pricat/pricat
+projectmgr/projectmgr
+scrum/scrum
+webpos/webpos
