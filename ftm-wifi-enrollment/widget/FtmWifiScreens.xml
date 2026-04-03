@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <screens xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xmlns="http://ofbiz.apache.org/Widget-Screen"
-    xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-screen.xsd">
+    xsi:schemaLocation="http://ofbiz.apache.org/Widget-Screen http://ofbiz.apache.org/dtds/widget-screen.xsd">
 
     <!-- Main decorator -->
     <screen name="main-decorator">
@@ -55,11 +55,10 @@
         <section>
             <actions>
                 <set field="employeeId" from-field="parameters.employeeId"/>
-                <entity-and entity-name="FtmAuthorizedUser" list="userList"
-                    delegator-name="ftmEnrollment">
-                    <field-map field-name="employeeId" from-field="employeeId"/>
-                </entity-and>
-                <set field="user" from-field="userList[0]"/>
+                <service service-name="getFtmAuthorizedUser" result-map="userResult">
+                    <field-map field-name="employeeId" from-field="parameters.employeeId"/>
+                </service>
+                <set field="user" from-field="userResult.user"/>
                 <set field="titleProperty"
                     value="${user?.fullName ? 'Edit User: ' + user.fullName : 'Add New User'}"/>
             </actions>
@@ -70,7 +69,7 @@
                             <include-form name="EditUserForm"
                                 location="component://ftm-wifi-enrollment/widget/FtmWifiForms.xml"/>
                         </screenlet>
-                        <screenlet title="Enrolled Devices" condition="user != null">
+                        <screenlet title="Enrolled Devices">
                             <include-form name="EnrolledDevicesList"
                                 location="component://ftm-wifi-enrollment/widget/FtmWifiForms.xml"/>
                         </screenlet>

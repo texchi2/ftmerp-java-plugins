@@ -19,7 +19,7 @@
 
     <context-param>
         <param-name>mainDecoratorLocation</param-name>
-        <param-value>component://ftm-wifi-enrollment/widget/FtmWifiScreens.xml</param-value>
+        <param-value>component://ftm-wifi-enrollment/widget/FtmWifiCommonScreens.xml</param-value>
     </context-param>
 
     <!-- Uses default OFBiz security (OFBTOOLS permission) -->
