@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <forms xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-form.xsd">
+    xmlns="http://ofbiz.apache.org/Widget-Form" xsi:schemaLocation="http://ofbiz.apache.org/Widget-Form http://ofbiz.apache.org/dtds/widget-form.xsd">
 
     <!-- ==================== FILTER FORM ==================== -->
     <form name="FindUsersFilter" type="single"
@@ -33,12 +33,6 @@
         list-name="userList"
         odd-row-style="alternate-row"
         default-table-style="basic-table hover-bar">
-        <actions>
-            <service service-name="getFtmAuthorizedUsers" result-map="serviceResult">
-                <field-map field-name="activeOnly" value="true"/>
-            </service>
-            <set field="userList" from-field="serviceResult.userList"/>
-        </actions>
         <field name="employeeId"   title="Employee ID">
             <hyperlink description="${employeeId}"
                 target="EditAuthorizedUser">

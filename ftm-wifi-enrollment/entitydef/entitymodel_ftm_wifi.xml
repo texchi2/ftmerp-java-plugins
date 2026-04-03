@@ -12,7 +12,7 @@
         never-cache="true" ensures OFBiz always reads fresh from PostgreSQL.
         DO NOT add <relation> to enrolled_devices or it_admins — managed by Flask portal.
     -->
-    <entity entity-name="FtmAuthorizedUser"
+    <entity entity-name="FtmAuthorizedUser" no-auto-stamp="true"
         package-name="org.apache.ofbiz.ftm.wifi"
         table-name="authorized_users"
         title="FTM Authorized WiFi User"
@@ -37,7 +37,7 @@
         ftm_wifi_audit_log table — new, created by deployment SQL script.
         Tracks all changes made via OFBiz HR module.
     -->
-    <entity entity-name="FtmWifiAuditLog"
+    <entity entity-name="FtmWifiAuditLog" no-auto-stamp="true"
         package-name="org.apache.ofbiz.ftm.wifi"
         table-name="ftm_wifi_audit_log"
         title="FTM WiFi Configuration Audit Log"
