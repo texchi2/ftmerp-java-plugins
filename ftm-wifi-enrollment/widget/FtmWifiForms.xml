@@ -101,7 +101,7 @@
         <field name="notes" title="Notes">
             <textarea rows="3" default-value="${user?.notes}"/>
         </field>
-        <field name="submitButton" title=" ">
+        <field name="submitButton" title="Save">
             <submit button-type="button">
                 <option description="${user != null ? 'Update User' : 'Create User'}"/>
             </submit>
