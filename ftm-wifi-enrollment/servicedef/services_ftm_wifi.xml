@@ -11,7 +11,7 @@
         location="component://ftm-wifi-enrollment/groovyScripts/ftm/wifi/GetAuthorizedUser.groovy"
         invoke="getFtmAuthorizedUser" auth="false">
         <description>Get single authorized user by employeeId</description>
-        <attribute name="employeeId" type="String" mode="IN" optional="false"/>
+        <attribute name="employeeId" type="String" mode="IN" optional="true"/>
         <attribute name="user"       type="org.apache.ofbiz.entity.GenericValue" mode="OUT" optional="true"/>
     </service>
 

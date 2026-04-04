@@ -54,13 +54,7 @@
     <screen name="EditAuthorizedUser">
         <section>
             <actions>
-                <set field="employeeId" from-field="parameters.employeeId"/>
-                <service service-name="getFtmAuthorizedUser" result-map="userResult">
-                    <field-map field-name="employeeId" from-field="parameters.employeeId"/>
-                </service>
-                <set field="user" from-field="userResult.user"/>
-                <set field="titleProperty"
-                    value="${user?.fullName ? 'Edit User: ' + user.fullName : 'Add New User'}"/>
+                <script location="component://ftm-wifi-enrollment/groovyScripts/ftm/wifi/EditUserActions.groovy"/>
             </actions>
             <widgets>
                 <decorator-screen name="main-decorator" location="${parameters.mainDecoratorLocation}">
