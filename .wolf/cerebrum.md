@@ -30,3 +30,12 @@
 - Never add PARAMETER think to Modelfile — think is an API field not Modelfile param
 - Always .toString() on ALL JDBC setString() parameters
 - Always declare variables before try block if used after finally
+
+## Do-Not-Repeat (File Download Pattern)
+[2026-4-5]
+- NEVER use <hyperlink> inside a Form widget for file downloads - generates JS form submit that browsers block
+- ALWAYS use <link> in Screen widget (FtmWifiScreens.xml) for file downloads
+- <link> creates a standalone hidden form that browsers handle correctly as download
+- Example: <link text="Export CSV" target="ExportAuthorizedUsersCsv" style="buttontext" url-mode="intra-app"/>
+- OFBiz <form type="single"> always generates method="post" with JS submit - never use for downloads
+
