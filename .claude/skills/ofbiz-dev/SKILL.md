@@ -265,3 +265,8 @@ export ANTHROPIC_API_KEY=""
 export ANTHROPIC_BASE_URL="http://192.168.30.3:11434"
 claude --model llama3.3-agent:latest
 ```
+
+### OFBiz file download pattern 
+use <link> in Screen XML (not <hyperlink> in Form XML) with a standalone hidden form. The <link> element in a screen widget creates a separate form context that browsers handle as a downloadable response, while <hyperlink> inside an existing form gets nested and blocked.
+
+
