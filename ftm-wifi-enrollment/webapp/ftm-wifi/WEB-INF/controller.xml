@@ -12,6 +12,11 @@
 
     <!-- Request Mappings -->
     <request-map uri="main"><security https="false" auth="true"/><response name="success" type="view" value="FindAuthorizedUsers"/></request-map>
+    <request-map uri="ExportAuthorizedUsersCsv">
+        <security https="false" auth="true"/>
+        <event type="groovy" path="component://ftm-wifi-enrollment/groovyScripts/ftm/wifi/ExportUsersCsv.groovy"/>
+        <response name="success" type="none"/>
+    </request-map>
     <request-map uri="FindAuthorizedUsers"><security https="false" auth="true"/><response name="success" type="view" value="FindAuthorizedUsers"/></request-map>
     <request-map uri="EditAuthorizedUser"><security https="false" auth="true"/><response name="success" type="view" value="EditAuthorizedUser"/></request-map>
     <request-map uri="CreateAuthorizedUser">
@@ -48,6 +53,7 @@
 
     <!-- View Mappings -->
     <view-map name="main" type="screen" page="component://ftm-wifi-enrollment/widget/FtmWifiScreens.xml#FindAuthorizedUsers"/>
+    <view-map name="csv" type="none"></view-map>
     <view-map name="FindAuthorizedUsers" type="screen" page="component://ftm-wifi-enrollment/widget/FtmWifiScreens.xml#FindAuthorizedUsers"/>
     <view-map name="EditAuthorizedUser" type="screen" page="component://ftm-wifi-enrollment/widget/FtmWifiScreens.xml#EditAuthorizedUser"/>
     <view-map name="ImportWifiUsers" type="screen" page="component://ftm-wifi-enrollment/widget/FtmWifiScreens.xml#ImportWifiUsers"/>

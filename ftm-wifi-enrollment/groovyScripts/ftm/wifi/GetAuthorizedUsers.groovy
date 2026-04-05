@@ -45,7 +45,7 @@ def getFtmAuthorizedUsers() {
                 department:     row.department,
                 position:       row.position,
                 deviceQuota:    row.device_quota,
-                ftmStaffVlan10: row.ftm_staff_vlan10,
+                ftmStaffVlan10: row.ftm_staff_vlan10 ? "Y" : "N",
                 notes:          row.notes,
                 active:         row.active
             ])

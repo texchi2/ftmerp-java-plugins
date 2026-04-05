@@ -26,6 +26,9 @@
         <field name="importLink" title=" ">
             <hyperlink description="Import from Excel" target="UploadWifiUsers"/>
         </field>
+        <field name="exportCsvLink" title=" ">
+            <hyperlink description="Export CSV" target="ExportAuthorizedUsersCsv" style="buttontext"/>
+        </field>
     </form>
 
     <!-- ==================== USER LIST FORM ==================== -->

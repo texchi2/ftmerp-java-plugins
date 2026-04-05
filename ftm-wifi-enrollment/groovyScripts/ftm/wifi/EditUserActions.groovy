@@ -23,7 +23,7 @@ if (employeeId?.trim()) {
                 department:     row.department,
                 position:       row.position,
                 deviceQuota:    row.device_quota,
-                ftmStaffVlan10: row.ftm_staff_vlan10,
+                ftmStaffVlan10: row.ftm_staff_vlan10 ? "true" : "false",
                 notes:          row.notes,
                 active:         row.active
             ]

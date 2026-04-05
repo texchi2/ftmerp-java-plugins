@@ -13,6 +13,7 @@ def updateFtmAuthorizedUser() {
 
     if (!parameters.employeeId?.trim()) return error("Employee ID is required")
     def empId = parameters.employeeId.trim()
+    def vlanWarning = null
 
     def sql = Sql.newInstance(jdbcUrl, jdbcUser, jdbcPass, jdbcDriver)
     try {
@@ -49,7 +50,7 @@ def updateFtmAuthorizedUser() {
             if (existing.ftm_staff_vlan10 != newVlan) {
                 def from = existing.ftm_staff_vlan10 ? "VLAN10 (FTM-Staff)" : "VLAN20 (FTM-Staff2)"
                 def to   = newVlan ? "VLAN10 (FTM-Staff)" : "VLAN20 (FTM-Staff2)"
-                result.vlanWarning = "VLAN tier changed for [${existing.username}]: ${from} -> ${to}. " +
+                vlanWarning = "VLAN tier changed for [${existing.username}]: ${from} -> ${to}. " +
                     "Device re-enrollment required. Notify IT to revoke existing certs."
                 auditRows.add([empId, changedBy, "ftmStaffVlan10",
                                existing.ftm_staff_vlan10.toString(), newVlan.toString()])
@@ -76,7 +77,7 @@ def updateFtmAuthorizedUser() {
     } finally {
         sql.close()
     }
-    return result
+    return success([vlanWarning: vlanWarning ?: ""])
 }
 
 return updateFtmAuthorizedUser()
