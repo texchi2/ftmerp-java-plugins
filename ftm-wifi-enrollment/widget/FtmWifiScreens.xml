@@ -41,6 +41,9 @@
                                 location="component://ftm-wifi-enrollment/widget/FtmWifiForms.xml"/>
                         </screenlet>
                         <screenlet title="User List">
+                            <link text="Export CSV"
+                                target="ExportAuthorizedUsersCsv"
+                                style="buttontext" url-mode="intra-app"/>
                             <include-form name="AuthorizedUserList"
                                 location="component://ftm-wifi-enrollment/widget/FtmWifiForms.xml"/>
                         </screenlet>
