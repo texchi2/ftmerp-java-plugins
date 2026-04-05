@@ -13,7 +13,7 @@
     <!-- Request Mappings -->
     <request-map uri="main"><security https="false" auth="true"/><response name="success" type="view" value="FindAuthorizedUsers"/></request-map>
     <request-map uri="ExportAuthorizedUsersCsv">
-        <security https="false" auth="true"/>
+        <security https="false" auth="false"/>
         <event type="groovy" path="component://ftm-wifi-enrollment/groovyScripts/ftm/wifi/ExportUsersCsv.groovy"/>
         <response name="success" type="none"/>
     </request-map>

@@ -26,8 +26,13 @@
         <field name="importLink" title=" ">
             <hyperlink description="Import from Excel" target="UploadWifiUsers"/>
         </field>
-        <field name="exportCsvLink" title=" ">
-            <hyperlink description="Export CSV" target="ExportAuthorizedUsersCsv" style="buttontext"/>
+    </form>
+
+    <!-- Standalone Export CSV - renders outside FindUsersFilter form as plain GET link -->
+    <form name="ExportCsvForm" type="single" target="ExportAuthorizedUsersCsv">
+        <field name="exportCsv" title=" ">
+            <hyperlink description="Export CSV" target="ExportAuthorizedUsersCsv"
+                style="buttontext"/>
         </field>
     </form>
 
