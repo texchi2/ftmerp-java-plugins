@@ -80,7 +80,7 @@
         invoke="importFtmUsersFromExcel" auth="true" use-transaction="true">
         <description>Import staff roster from Excel (.xlsx/.xls)</description>
         <attribute name="uploadedFile"  type="java.nio.ByteBuffer" mode="IN" optional="false"/>
-        <attribute name="fileName"      type="String"  mode="IN"  optional="false"/>
+        <attribute name="fileName"      type="String"  mode="IN"  optional="true"/>
         <attribute name="previewOnly"   type="Boolean" mode="IN"  optional="true"/>
         <attribute name="previewList"   type="List"    mode="OUT" optional="true"/>
         <attribute name="addedCount"    type="Integer" mode="OUT" optional="true"/>
@@ -90,4 +90,18 @@
         <attribute name="warnings"      type="List"    mode="OUT" optional="true"/>
     </service>
 
+    <service name="activateFtmAuthorizedUser" engine="groovy"
+        location="component://ftm-wifi-enrollment/groovyScripts/ftm/wifi/ActivateUser.groovy"
+        invoke="activateFtmAuthorizedUser" auth="true">
+        <description>Re-activate a deactivated WiFi user</description>
+        <attribute name="employeeId" type="String" mode="IN" optional="false"/>
+        <attribute name="message"    type="String" mode="OUT" optional="true"/>
+    </service>
+    <service name="deleteFtmAuthorizedUser" engine="groovy"
+        location="component://ftm-wifi-enrollment/groovyScripts/ftm/wifi/DeleteUser.groovy"
+        invoke="deleteFtmAuthorizedUser" auth="true">
+        <description>Permanently delete a WiFi user</description>
+        <attribute name="employeeId" type="String" mode="IN" optional="false"/>
+        <attribute name="message"    type="String" mode="OUT" optional="true"/>
+    </service>
 </services>
