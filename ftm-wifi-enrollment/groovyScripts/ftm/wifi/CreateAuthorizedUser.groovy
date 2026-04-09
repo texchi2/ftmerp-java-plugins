@@ -18,7 +18,7 @@ def createFtmAuthorizedUser() {
 
     def empId    = parameters.employeeId.trim()
     def uname    = parameters.username.trim()
-    def quota    = parameters.deviceQuota ? (parameters.deviceQuota as Integer) : 2
+    def quota    = parameters.deviceQuota != null && parameters.deviceQuota != "" ? (parameters.deviceQuota as Integer) : 1
     def vlan10   = (parameters.ftmStaffVlan10 == true || parameters.ftmStaffVlan10 == "Y")
 
     def sql = Sql.newInstance(jdbcUrl, jdbcUser, jdbcPass, jdbcDriver)

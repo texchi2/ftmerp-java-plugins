@@ -1,6 +1,3 @@
-// DeactivateUser.groovy
-// FTM WiFi Enrollment — set active=false + FreeRADIUS reminder
-
 import groovy.sql.Sql
 
 def deactivateFtmAuthorizedUser() {
@@ -15,31 +12,29 @@ def deactivateFtmAuthorizedUser() {
 
     def sql = Sql.newInstance(jdbcUrl, jdbcUser, jdbcPass, jdbcDriver)
     try {
-        def existing = sql.firstRow("SELECT * FROM authorized_users WHERE employee_id = ?", [empId])
-        if (!existing)             return error("User [${empId}] not found")
-        if (!existing.active)      return error("User [${existing.username}] is already inactive")
+        def existing = sql.firstRow(
+            "SELECT username, active, ftm_staff_vlan10 FROM authorized_users WHERE employee_id = ?",
+            [empId])
+        if (!existing)        return error("User [${empId}] not found")
+        if (!existing.active) return error("User [${existing.username}] is already inactive")
 
-        def uname  = existing.username
-        def vlan10 = existing.ftm_staff_vlan10
-        def ssid   = vlan10 ? "FTM-Staff (VLAN10)" : "FTM-Staff2 (VLAN20)"
-
-        sql.execute("UPDATE authorized_users SET active = FALSE WHERE employee_id = ?", [empId])
-
+        // DEACTIVATE only — set active=FALSE, do NOT delete
+        sql.execute(
+            "UPDATE authorized_users SET active = FALSE WHERE employee_id = ?",
+            [empId])
         sql.execute("""
             INSERT INTO ftm_wifi_audit_log
                 (employee_id, changed_by, field_name, old_value, new_value, action)
             VALUES (?, ?, 'active', 'true', 'false', 'DEACTIVATE')
         """, [empId, changedBy])
 
-        result.radiusReminder =
-            "ACTION REQUIRED: Disable FreeRADIUS user [${uname}] on pfSense to " +
-            "revoke ${ssid} WiFi access immediately.\n" +
-            "pfSense path: Services > FreeRADIUS > Users > [${uname}] > Auth-Type := Reject\n" +
-            "Also: UPDATE enrolled_devices SET status='revoked' WHERE user_id = <id> in ftm_enrollment DB."
+        def ssid = existing.ftm_staff_vlan10 ? "FTM-Staff (VLAN10)" : "FTM-Staff2 (VLAN20)"
+        return success([
+            radiusReminder: "ACTION REQUIRED: Disable FreeRADIUS user [${existing.username}] " +
+                "on pfSense to revoke ${ssid} WiFi access."
+        ])
     } finally {
         sql.close()
     }
-    return result
 }
-
 return deactivateFtmAuthorizedUser()
