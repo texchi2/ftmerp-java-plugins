@@ -5,7 +5,7 @@ description: >-
 Use this agent to test OFBiz changes by running curl commands, checking
 logs, and verifying PostgreSQL data. Invoked automatically after any code
 change by ofbiz-coder. Reports PASS/FAIL with evidence.
-model: llama3.3-agent:latest
+model: gemma4-ofbiz:latest
 tools:
 
 - Bash

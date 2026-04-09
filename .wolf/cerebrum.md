@@ -39,3 +39,31 @@
 - Example: <link text="Export CSV" target="ExportAuthorizedUsersCsv" style="buttontext" url-mode="intra-app"/>
 - OFBiz <form type="single"> always generates method="post" with JS submit - never use for downloads
 
+
+## Agent Team Configuration (Apr 2026)
+- Orchestrator: gemma4-ofbiz:latest (gemma4:31b) — best tool calling, 86.4% τ2-bench
+- Planner: ofbiz-think:latest (gpt-oss:120b) — architecture, thinking mode
+- Coder: devstral-ofbiz:latest (devstral:24b) — file editing, Groovy/XML
+- Tester: gemma4-ofbiz:latest — curl tests, log verification
+- Default Haiku/Sonnet → gemma4-ofbiz, Opus → ofbiz-think
+- Ollama context: 65536 (MacStudio auto-scales to 262144 from 161GB VRAM)
+
+## Phase 7 Complete (Apr 9 2026) — Critical Patterns
+
+### File Upload Root Cause
+UtilHttp.getParameterMap() skips multipart when URL params exist (externalLoginKey).
+ALWAYS use type="groovy" event for file uploads. Read from request.getAttribute("multiPartMap").
+
+### Screen Context Bridge
+Groovy events → request.setAttribute() → bridge via ImportPreviewActions.groovy → context.x
+
+### @Field required
+Script-level vars need @groovy.transform.Field to be accessible in methods.
+
+### Data Types
+- ftmStaffVlan10: stored as "Y"/"N" string (not boolean)
+- active: raw Java Boolean — use use-when="active" / use-when="!active"
+- deviceQuota: use != null && != "" check (0 is falsy in Groovy)
+
+### Deactivate ≠ Delete
+Deactivate = SET active=FALSE (reversible). Delete = permanent with JS confirm FTL.

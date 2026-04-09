@@ -31,4 +31,4 @@ endif::[]
 
 include::../../ldap/src/docs/asciidoc/SingleSignOn.adoc[leveloffset=+2]
 
-
+include::ftm-developer-manual.adoc[leveloffset=+2]
