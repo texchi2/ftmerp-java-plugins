@@ -6,7 +6,7 @@ description: >-
   ofbiz-tester (validation). Invoke with /ofbiz-dev or for any task involving
   ftm-wifi-enrollment plugin, Groovy services, OFBiz XML, PostgreSQL queries,
   or OFBiz restart/testing.
-model: devstral-ofbiz:latest
+model: gemma4-ofbiz:latest
 tools:
   - Read
   - Grep

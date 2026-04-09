@@ -1,6 +1,6 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-04-05T09:18:39.312Z
+> Auto-maintained by OpenWolf. Last scanned: 2026-04-07T22:00:00.893Z
 > Files: 509 tracked | Anatomy hits: 0 | Misses: 0
 
 ## ./
@@ -26,9 +26,9 @@
 ## .claude/agents/
 
 - `ofbiz-coder.md` — OFBiz Coder - FTM Garments Swaziland (~1089 tok)
-- `ofbiz-dev.md` — OFBiz Development Orchestrator — FTM Garments Swaziland (~987 tok)
+- `ofbiz-dev.md` — OFBiz Development Orchestrator — FTM Garments Swaziland (~986 tok)
 - `ofbiz-planner.md` — Role (~297 tok)
-- `ofbiz-tester.md` — OFBiz Tester - FTM Garments Swaziland (~686 tok)
+- `ofbiz-tester.md` — OFBiz Tester - FTM Garments Swaziland (~685 tok)
 
 ## .claude/rules/
 
@@ -40,7 +40,7 @@
 
 ## .claude/skills/ofbiz-dev/
 
-- `SKILL.md` — ofbiz-dev — FTM OFBiz Plugin Development Skill (~2593 tok)
+- `SKILL.md` — ofbiz-dev — FTM OFBiz Plugin Development Skill (~2670 tok)
 
 ## .github/
 
