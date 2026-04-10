@@ -1,110 +1,83 @@
 // UpdateAuthorizedUser.groovy
-// FTM WiFi Enrollment — update authorized user fields
-// Emits vlanWarning when ftm_staff_vlan10 changes (requires device re-enrollment)
+// FTM WiFi Enrollment — update authorized user
+// Emits vlanWarning when ftm_staff_vlan10 changes
 
-import org.apache.ofbiz.entity.util.EntityQuery
-import org.apache.ofbiz.base.util.UtilDateTime
+import groovy.sql.Sql
 
 def updateFtmAuthorizedUser() {
-    def ftmDelegator = org.apache.ofbiz.entity.DelegatorFactory.getDelegator("ftmEnrollment")
-    def userLogin = context.userLogin
-    def changedBy = userLogin?.getString("userLoginId") ?: "system"
+    def jdbcUrl    = "jdbc:postgresql://192.168.30.3:5432/ftm_enrollment"
+    def jdbcUser   = "enrolladmin"
+    def jdbcPass   = System.getenv("FTM_ENROLLMENT_DB_PASS") ?: "ftmscep2026"
+    def jdbcDriver = "org.postgresql.Driver"
+    def changedBy  = context.userLogin?.getString("userLoginId") ?: "system"
 
-    if (!parameters.employeeId?.trim()) {
-        return error("Employee ID is required")
-    }
+    if (!parameters.employeeId?.trim()) return error("Employee ID is required")
+    def empId = parameters.employeeId.trim()
+    def vlanWarning = null
 
-    def existing = EntityQuery.use(ftmDelegator)
-        .from("FtmAuthorizedUser")
-        .where("employeeId", parameters.employeeId.trim())
-        .queryFirst()
+    def sql = Sql.newInstance(jdbcUrl, jdbcUser, jdbcPass, jdbcDriver)
+    try {
+        def existing = sql.firstRow("SELECT * FROM authorized_users WHERE employee_id = ?", [empId])
+        if (!existing) return error("User with Employee ID [${empId}] not found")
 
-    if (!existing) {
-        return error("User with Employee ID [${parameters.employeeId}] not found")
-    }
+        def setClauses = []
+        def values     = []
+        def auditRows  = []
 
-    def warnings = []
-    def changes = [:]
-
-    // Check VLAN tier change — requires device re-enrollment
-    if (parameters.ftmStaffVlan10 != null) {
-        def oldVlan = existing.getBoolean("ftmStaffVlan10") ?: false
-        def newVlan = (parameters.ftmStaffVlan10 == true || parameters.ftmStaffVlan10 == "Y")
-        if (oldVlan != newVlan) {
-            def tierFrom = oldVlan ? "VLAN10 (FTM-Staff)" : "VLAN20 (FTM-Staff2)"
-            def tierTo   = newVlan ? "VLAN10 (FTM-Staff)" : "VLAN20 (FTM-Staff2)"
-            warnings.add("VLAN tier changed for [${existing.getString('username')}]: " +
-                "${tierFrom} -> ${tierTo}. " +
-                "Device re-enrollment required. Notify IT to revoke existing certs via pfSense.")
-            changes.ftmStaffVlan10 = [old: oldVlan, new: newVlan]
+        if (parameters.fullName != null) {
+            setClauses.add("full_name = ?")
+            values.add(parameters.fullName)
+            auditRows.add([empId, changedBy, "fullName", existing.full_name, parameters.fullName])
         }
-    }
-
-    // Build dynamic UPDATE
-    def setClauses = []
-    def values = []
-
-    if (parameters.fullName != null) {
-        setClauses.add("full_name = ?")
-        values.add(parameters.fullName)
-        changes.fullName = [old: existing.getString("fullName"), new: parameters.fullName]
-    }
-    if (parameters.department != null) {
-        setClauses.add("department = ?")
-        values.add(parameters.department)
-        changes.department = [old: existing.getString("department"), new: parameters.department]
-    }
-    if (parameters.position != null) {
-        setClauses.add("position = ?")
-        values.add(parameters.position)
-    }
-    if (parameters.deviceQuota != null) {
-        setClauses.add("device_quota = ?")
-        values.add(parameters.deviceQuota as Integer)
-    }
-    if (parameters.ftmStaffVlan10 != null) {
-        setClauses.add("ftm_staff_vlan10 = ?")
-        values.add(parameters.ftmStaffVlan10 == true || parameters.ftmStaffVlan10 == "Y")
-    }
-    if (parameters.notes != null) {
-        setClauses.add("notes = ?")
-        values.add(parameters.notes)
-    }
-
-    if (!setClauses) {
-        return error("No fields to update")
-    }
-
-    values.add(parameters.employeeId.trim())
-    def sql = "UPDATE authorized_users SET " + setClauses.join(", ") + " WHERE employee_id = ?"
-
-    ftmDelegator.withConnection("ftmEnrollmentDataSource") { conn ->
-        def stmt = conn.prepareStatement(sql)
-        values.eachWithIndex { val, i ->
-            stmt.setObject(i + 1, val)
+        if (parameters.department != null) {
+            setClauses.add("department = ?")
+            values.add(parameters.department)
+            auditRows.add([empId, changedBy, "department", existing.department, parameters.department])
         }
-        stmt.executeUpdate()
-        stmt.close()
-    }
+        if (parameters.position != null) {
+            setClauses.add("position = ?")
+            values.add(parameters.position)
+        }
+        if (parameters.deviceQuota != null) {
+            setClauses.add("device_quota = ?")
+            values.add(parameters.deviceQuota as Integer)
+        }
+        if (parameters.ftmStaffVlan10 != null) {
+            def newVlan = (parameters.ftmStaffVlan10 == true || parameters.ftmStaffVlan10 == "Y")
+            setClauses.add("ftm_staff_vlan10 = ?")
+            values.add(newVlan)
+            // VLAN tier change warning
+            if (existing.ftm_staff_vlan10 != newVlan) {
+                def from = existing.ftm_staff_vlan10 ? "VLAN10 (FTM-Staff)" : "VLAN20 (FTM-Staff2)"
+                def to   = newVlan ? "VLAN10 (FTM-Staff)" : "VLAN20 (FTM-Staff2)"
+                vlanWarning = "VLAN tier changed for [${existing.username}]: ${from} -> ${to}. " +
+                    "Device re-enrollment required. Notify IT to revoke existing certs."
+                auditRows.add([empId, changedBy, "ftmStaffVlan10",
+                               existing.ftm_staff_vlan10.toString(), newVlan.toString()])
+            }
+        }
+        if (parameters.notes != null) {
+            setClauses.add("notes = ?")
+            values.add(parameters.notes)
+        }
 
-    // Audit each changed field
-    def now = UtilDateTime.nowTimestamp()
-    changes.each { fieldName, vals ->
-        def audit = ftmDelegator.makeValue("FtmWifiAuditLog")
-        audit.set("changedBy", changedBy)
-        audit.set("changedAt", now)
-        audit.set("employeeId", parameters.employeeId.trim())
-        audit.set("fieldName", fieldName)
-        audit.set("oldValue", vals.old?.toString())
-        audit.set("newValue", vals.new?.toString())
-        audit.set("action", "UPDATE")
-        ftmDelegator.create(audit)
-    }
+        if (!setClauses) return error("No fields to update")
 
-    if (warnings) {
-        result.vlanWarning = warnings.join("; ")
+        values.add(empId)
+        sql.execute("UPDATE authorized_users SET " + setClauses.join(", ") + " WHERE employee_id = ?", values)
+
+        // Write audit rows
+        auditRows.each { r ->
+            sql.execute("""
+                INSERT INTO ftm_wifi_audit_log
+                    (employee_id, changed_by, field_name, old_value, new_value, action)
+                VALUES (?, ?, ?, ?, ?, 'UPDATE')
+            """, [r[0], r[1], r[2], r[3], r[4]])
+        }
+    } finally {
+        sql.close()
     }
-    return result
+    return success([vlanWarning: vlanWarning ?: ""])
 }
 
 return updateFtmAuthorizedUser()

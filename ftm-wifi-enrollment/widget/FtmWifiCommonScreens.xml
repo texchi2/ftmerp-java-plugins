@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<screens xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns="http://ofbiz.apache.org/Widget-Screen"
+        xsi:schemaLocation="http://ofbiz.apache.org/Widget-Screen http://ofbiz.apache.org/dtds/widget-screen.xsd">
+
+    <screen name="main-decorator">
+        <section>
+            <actions>
+                <property-map resource="CommonUiLabels" map-name="uiLabelMap" global="true"/>
+                <set field="activeApp" value="ftm-wifi" global="true"/>
+                <set field="applicationMenuName" value="FtmWifiAppBar" global="true"/>
+                <set field="applicationMenuLocation"
+                    value="component://ftm-wifi-enrollment/widget/FtmWifiMenus.xml" global="true"/>
+                <set field="applicationTitle" value="FTM WiFi Enrollment" global="true"/>
+            </actions>
+            <widgets>
+                <include-screen name="ApplicationDecorator"
+                    location="component://commonext/widget/CommonScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+
+</screens>

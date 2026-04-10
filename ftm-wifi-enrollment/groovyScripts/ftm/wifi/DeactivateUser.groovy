@@ -1,65 +1,40 @@
-// DeactivateUser.groovy
-// FTM WiFi Enrollment — set active=false
-// Returns radiusReminder message for IT to revoke on pfSense FreeRADIUS
-
-import org.apache.ofbiz.entity.util.EntityQuery
-import org.apache.ofbiz.base.util.UtilDateTime
+import groovy.sql.Sql
 
 def deactivateFtmAuthorizedUser() {
-    def ftmDelegator = org.apache.ofbiz.entity.DelegatorFactory.getDelegator("ftmEnrollment")
-    def userLogin = context.userLogin
-    def changedBy = userLogin?.getString("userLoginId") ?: "system"
+    def jdbcUrl    = "jdbc:postgresql://192.168.30.3:5432/ftm_enrollment"
+    def jdbcUser   = "enrolladmin"
+    def jdbcPass   = System.getenv("FTM_ENROLLMENT_DB_PASS") ?: "ftmscep2026"
+    def jdbcDriver = "org.postgresql.Driver"
+    def changedBy  = context.userLogin?.getString("userLoginId") ?: "system"
 
-    if (!parameters.employeeId?.trim()) {
-        return error("Employee ID is required")
+    if (!parameters.employeeId?.trim()) return error("Employee ID is required")
+    def empId = parameters.employeeId.trim()
+
+    def sql = Sql.newInstance(jdbcUrl, jdbcUser, jdbcPass, jdbcDriver)
+    try {
+        def existing = sql.firstRow(
+            "SELECT username, active, ftm_staff_vlan10 FROM authorized_users WHERE employee_id = ?",
+            [empId])
+        if (!existing)        return error("User [${empId}] not found")
+        if (!existing.active) return error("User [${existing.username}] is already inactive")
+
+        // DEACTIVATE only — set active=FALSE, do NOT delete
+        sql.execute(
+            "UPDATE authorized_users SET active = FALSE WHERE employee_id = ?",
+            [empId])
+        sql.execute("""
+            INSERT INTO ftm_wifi_audit_log
+                (employee_id, changed_by, field_name, old_value, new_value, action)
+            VALUES (?, ?, 'active', 'true', 'false', 'DEACTIVATE')
+        """, [empId, changedBy])
+
+        def ssid = existing.ftm_staff_vlan10 ? "FTM-Staff (VLAN10)" : "FTM-Staff2 (VLAN20)"
+        return success([
+            radiusReminder: "ACTION REQUIRED: Disable FreeRADIUS user [${existing.username}] " +
+                "on pfSense to revoke ${ssid} WiFi access."
+        ])
+    } finally {
+        sql.close()
     }
-
-    def existing = EntityQuery.use(ftmDelegator)
-        .from("FtmAuthorizedUser")
-        .where("employeeId", parameters.employeeId.trim())
-        .queryFirst()
-
-    if (!existing) {
-        return error("User with Employee ID [${parameters.employeeId}] not found")
-    }
-
-    if (existing.getString("active") == "N") {
-        return error("User [${existing.getString('username')}] is already inactive")
-    }
-
-    def username = existing.getString("username")
-    def vlan10 = existing.getBoolean("ftmStaffVlan10") ?: false
-    def ssid = vlan10 ? "FTM-Staff (VLAN10)" : "FTM-Staff2 (VLAN20)"
-
-    // Set active = false
-    ftmDelegator.withConnection("ftmEnrollmentDataSource") { conn ->
-        def stmt = conn.prepareStatement(
-            "UPDATE authorized_users SET active = FALSE WHERE employee_id = ?")
-        stmt.setString(1, parameters.employeeId.trim())
-        stmt.executeUpdate()
-        stmt.close()
-    }
-
-    // Audit
-    def audit = ftmDelegator.makeValue("FtmWifiAuditLog")
-    audit.set("changedBy", changedBy)
-    audit.set("changedAt", UtilDateTime.nowTimestamp())
-    audit.set("employeeId", parameters.employeeId.trim())
-    audit.set("fieldName", "active")
-    audit.set("oldValue", "true")
-    audit.set("newValue", "false")
-    audit.set("action", "DEACTIVATE")
-    ftmDelegator.create(audit)
-
-    // FreeRADIUS revocation reminder — must be done manually on pfSense
-    result.radiusReminder = (
-        "ACTION REQUIRED: Disable FreeRADIUS user [${username}] on pfSense to " +
-        "revoke ${ssid} WiFi access immediately.\n" +
-        "pfSense path: Services > FreeRADIUS > Users > find [${username}] > set Auth-Type := Reject\n" +
-        "Also update enrolled_devices: SET status='revoked' WHERE user_id = <id> in ftm_enrollment DB."
-    )
-
-    return result
 }
-
 return deactivateFtmAuthorizedUser()

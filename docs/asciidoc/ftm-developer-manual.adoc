@@ -1,0 +1,278 @@
+= FTM Garments OFBiz Plugin Developer Manual
+Dr. Jamal Tex Li-Hsing Chi, IT Head, FTM Garments Swaziland
+:toc:
+:sectnums:
+:imagesdir: ./images
+
+== Overview
+
+This manual documents FTM-specific OFBiz plugin development patterns, hard-won from Phase 7 (ftm-wifi-enrollment, Mar–Apr 2026). Read this before writing any new plugin code.
+
+== Infrastructure
+
+[cols="1,2"]
+|===
+|Component|Detail
+
+|OFBiz host|ofbiz-dev (Incus container, 192.168.30.102:8080)
+|PostgreSQL|192.168.30.3:5432, db=ftm_enrollment, user=enrolladmin
+|Ollama|MacStudio M2 Ultra, ZeroTier 192.168.192.79:11434 → tunnel 192.168.30.3:11434
+|Git|texchi2/ftmerp-java-plugins, branch feature/ftm-wifi-enrollment
+|Claude Code agents|gemma4-ofbiz:latest (orchestrator), devstral-ofbiz (coder)
+|===
+
+== Plugin Structure
+
+----
+ftm-[name]/
+├── build.gradle                    ← pluginLibsCompile dependencies
+├── ofbiz-component.xml             ← MUST include <classpath type="dir" location="lib"/>
+├── lib/                            ← JARs copied from ~/.gradle/caches
+├── entitydef/entitymodel_ftm_*.xml
+├── servicedef/services_ftm_*.xml
+├── groovyScripts/ftm/[name]/       ← Service + Event scripts
+├── template/                       ← FreeMarker .ftl files
+├── webapp/ftm-[name]/WEB-INF/
+│   ├── controller.xml
+│   └── web.xml
+└── widget/
+    ├── FtmWifiScreens.xml
+    ├── FtmWifiForms.xml
+    └── FtmWifiMenus.xml
+----
+
+== Critical OFBiz Patterns
+
+=== File Download (CSV/Excel)
+
+**CORRECT** — use screen `<link>` widget:
+[source,xml]
+----
+<link text="Export CSV" target="ExportAuthorizedUsersCsv"
+    style="buttontext" url-mode="intra-app"/>
+----
+
+**WRONG** — form `<hyperlink>` generates JS submit blocked by browser:
+[source,xml]
+----
+<hyperlink description="Export CSV" target="ExportAuthorizedUsersCsv"/>
+----
+
+Groovy event pattern (controller: `type="groovy"`, `type="none"` response):
+[source,groovy]
+----
+response.contentType = "text/csv;charset=UTF-8"
+response.setHeader("Content-Disposition", "attachment; filename=\"export.csv\"")
+def writer = response.writer
+writer.println("col1,col2")
+// ... write rows ...
+writer.flush()
+response.flushBuffer()
+return "success"
+----
+
+=== File Upload (Excel/multipart)
+
+**Root cause**: `UtilHttp.getParameterMap()` only calls `getMultiPartParameterMap()` when `params.isEmpty()`. OFBiz always adds `externalLoginKey` to URL, so params is never empty → multipart never parsed when using `type="service"`.
+
+**Solution**: Use `type="groovy"` event for upload endpoints:
+[source,xml]
+----
+<request-map uri="PreviewWifiImport">
+    <security https="false" auth="true"/>
+    <event type="groovy"
+        path="component://ftm-wifi-enrollment/groovyScripts/ftm/wifi/ImportUsersFromExcel.groovy"
+        invoke="previewImport"/>
+    <response name="success" type="view" value="ImportPreview"/>
+</request-map>
+----
+
+Read ByteBuffer in Groovy event:
+[source,groovy]
+----
+def previewImport() {
+    // OFBiz sets multiPartMap as request attribute (OFBIZ-10833)
+    def multiPartMap = request.getAttribute("multiPartMap")
+    def bb = multiPartMap?.get("uploadedFile")
+    // Store bytes in session for multi-step commit
+    def bytes = new byte[bb.remaining()]
+    bb.get(bytes)
+    request.getSession().setAttribute("importFileBytes", bytes)
+    // ... parse with POI ...
+    return "success"
+}
+----
+
+=== Screen Context Bridge
+
+OFBiz Groovy events set `request` attributes but screen `<set field= from-field=>` reads from screen context. Bridge via a screen action script:
+
+[source,xml]
+----
+<!-- FtmWifiScreens.xml -->
+<screen name="ImportPreview">
+    <section>
+        <actions>
+            <script location="component://ftm-wifi-enrollment/groovyScripts/ftm/wifi/ImportPreviewActions.groovy"/>
+        </actions>
+----
+
+[source,groovy]
+----
+// ImportPreviewActions.groovy
+context.previewList = request.getAttribute("previewList") ?: []
+context.errorList   = request.getAttribute("errorList")   ?: []
+context.warnings    = request.getAttribute("warnings")    ?: []
+----
+
+=== Groovy Script Scoping
+
+Script-level `def` variables are NOT accessible inside methods. Use `@groovy.transform.Field`:
+
+[source,groovy]
+----
+@groovy.transform.Field String JDBC_URL  = "jdbc:postgresql://192.168.30.3:5432/ftm_enrollment"
+@groovy.transform.Field String JDBC_USER = "enrolladmin"
+@groovy.transform.Field String JDBC_PASS = System.getenv("FTM_ENROLLMENT_DB_PASS") ?: "ftmscep2026"
+
+@groovy.transform.Field
+def getCellStr = { cell ->
+    if (!cell) return ""
+    switch (cell.getCellType()) {
+        case CellType.STRING:  return cell.getStringCellValue()?.trim() ?: ""
+        case CellType.NUMERIC: return String.valueOf((long) cell.getNumericCellValue())
+        default: return ""
+    }
+}
+----
+
+=== Service Results in Screens
+
+OFBiz stores service results prefixed by service name:
+[source,xml]
+----
+<!-- CORRECT -->
+<set field="userList" from-field="getFtmAuthorizedUsers.userList"/>
+
+<!-- WRONG — only works for Groovy events that set request attributes -->
+<set field="userList" from-field="userList"/>
+----
+
+=== Form XSD Rules
+
+- `<submit>` must NOT have `<option>` children — use `title=` on `<field>` for button label
+- `<form type="upload">` handles multipart — do NOT add `enctype=`
+- `confirmation=` not allowed on `<hyperlink>` — use FTL template with JS confirm
+- `style=` not allowed on `<display>` elements
+- `also-hidden="false"` on hyperlink has no effect inside forms — use screen `<link>` instead
+
+=== Delete with JS Confirmation
+
+[source,xml]
+----
+<!-- FtmWifiScreens.xml — add platform-specific FTL to screen -->
+<platform-specific>
+    <html><html-template
+        location="component://ftm-wifi-enrollment/template/DeleteUserButton.ftl"/>
+    </html>
+</platform-specific>
+----
+
+[source,ftl]
+----
+<#-- DeleteUserButton.ftl -->
+<#if user??>
+<a href="javascript:void(0)"
+   onclick="if(confirm('Permanently delete [${user.employeeId}] ${user.fullName}?')) {
+       window.location='/ftm-wifi/control/DeleteUser?employeeId=${user.employeeId}&externalLoginKey=${requestAttributes.externalLoginKey!}';
+   }">Delete User permanently</a>
+</#if>
+----
+
+== Data Field Mapping
+
+=== authorized_users (PostgreSQL) ↔ OFBiz context
+
+[cols="1,1,1"]
+|===
+|PostgreSQL column|Groovy map key|Form field name
+
+|employee_id|employeeId|employeeId
+|full_name|fullName|fullName
+|username|username|username
+|department|department|department
+|position|position|position
+|device_quota|deviceQuota|deviceQuota
+|ftm_staff_vlan10 (bool)|ftmStaffVlan10 → "Y"/"N"|ftmStaffVlan10
+|active (bool)|active (raw Boolean)|active
+|notes|notes|notes
+|===
+
+NOTE: `ftmStaffVlan10` stored as "Y"/"N" string in userList map. Use `ftmStaffVlan10 == 'Y'` in display description, `ftmStaffVlan10 ? 'Yes' : 'No'` for boolean context.
+
+NOTE: `active` stored as raw Java Boolean in userList map. Use `use-when="active"` and `use-when="!active"` for toggle buttons.
+
+=== Excel Import Column Order
+
+[cols="1,1,1"]
+|===
+|Column index|Header|DB field
+
+|0|Employee ID|employee_id
+|1|Full Name|full_name
+|2|Username|username
+|3|Department|department
+|4|Position|position
+|5|Device Quota|device_quota
+|6|FTM-Staff VLAN10 (Y/N)|ftm_staff_vlan10
+|7|Notes|notes
+|===
+
+== Third-Party JARs
+
+Add to `build.gradle` using `pluginLibsCompile`, then copy from `~/.gradle/caches` to `lib/`:
+
+[source,gradle]
+----
+dependencies {
+    pluginLibsCompile 'org.apache.poi:poi:5.3.0'
+    pluginLibsCompile 'org.apache.poi:poi-ooxml:5.3.0'
+    pluginLibsCompile 'org.apache.poi:poi-ooxml-lite:5.3.0'
+    pluginLibsCompile 'org.apache.xmlbeans:xmlbeans:5.2.1'
+    pluginLibsCompile 'org.apache.commons:commons-compress:1.26.2'
+}
+----
+
+Register in `ofbiz-component.xml`:
+[source,xml]
+----
+<classpath type="dir" location="lib"/>
+----
+
+Requires OFBiz restart to load new JARs.
+
+== Deactivate vs Delete Pattern
+
+[cols="1,1,1"]
+|===
+|Action|SQL|Reversible
+
+|Deactivate|UPDATE authorized_users SET active=FALSE|Yes — Activate button
+|Activate|UPDATE authorized_users SET active=TRUE|Yes — Deactivate button
+|Delete|DELETE FROM authorized_users|No — JS confirm required
+|===
+
+All actions insert into `ftm_wifi_audit_log` with `action` = 'DEACTIVATE'/'ACTIVATE'/'DELETE'.
+
+== Git Workflow
+
+----
+git checkout -b feature/ftm-[plugin]
+# develop...
+git add ftm-[plugin]/
+git commit -m "feat([plugin]): description"
+git push --no-verify origin feature/ftm-[plugin]
+----
+
+OFBiz hot-deploy: changes to `.groovy`, `.xml` files take effect immediately (no restart).
+Restart required for: new JARs, `ofbiz-component.xml` changes, new service definitions.

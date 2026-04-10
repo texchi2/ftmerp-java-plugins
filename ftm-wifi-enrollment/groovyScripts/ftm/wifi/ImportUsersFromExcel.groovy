@@ -1,174 +1,171 @@
-// ImportUsersFromExcel.groovy
-// FTM WiFi Enrollment — import staff roster from Excel (.xlsx or .xls)
-// Uses Apache POI (bundled with OFBiz) — no internet dependencies
-//
-// Excel column mapping (0-indexed, row 0 = header, data from row 1):
-//   0 = employee_id
-//   1 = full_name
-//   2 = username
-//   3 = department
-//   4 = position
-//   5 = device_quota   (numeric, default 2)
-//   6 = ftm_staff_vlan10  (Y/N or TRUE/FALSE)
-//   7 = notes
-
+// ImportUsersFromExcel.groovy — FTM WiFi Enrollment Excel import
+// Handles both service invocation and direct Groovy event (previewImport)
 import org.apache.poi.ss.usermodel.WorkbookFactory
 import org.apache.poi.ss.usermodel.CellType
-import org.apache.ofbiz.entity.util.EntityQuery
-import org.apache.ofbiz.base.util.UtilDateTime
+import groovy.sql.Sql
+import org.apache.ofbiz.base.util.UtilHttp
 
-def importFtmUsersFromExcel() {
-    def ftmDelegator = org.apache.ofbiz.entity.DelegatorFactory.getDelegator("ftmEnrollment")
-    def userLogin = context.userLogin
-    def changedBy = userLogin?.getString("userLoginId") ?: "system"
-    def previewOnly = parameters.previewOnly ?: false
+@groovy.transform.Field String JDBC_URL    = "jdbc:postgresql://192.168.30.3:5432/ftm_enrollment"
+@groovy.transform.Field String JDBC_USER   = "enrolladmin"
+@groovy.transform.Field String JDBC_PASS   = System.getenv("FTM_ENROLLMENT_DB_PASS") ?: "ftmscep2026"
+@groovy.transform.Field String JDBC_DRIVER = "org.postgresql.Driver"
 
-    if (!parameters.uploadedFile) {
-        return error("No file uploaded")
+@groovy.transform.Field
+def getCellStr = { cell ->
+    if (!cell) return ""
+    switch (cell.getCellType()) {
+        case CellType.STRING:  return cell.getStringCellValue()?.trim() ?: ""
+        case CellType.NUMERIC: return String.valueOf((long) cell.getNumericCellValue())
+        case CellType.BOOLEAN: return cell.getBooleanCellValue() ? "Y" : "N"
+        default: return ""
     }
+}
 
-    // Convert ByteBuffer to InputStream
-    def byteBuffer = parameters.uploadedFile
-    def bytes = new byte[byteBuffer.remaining()]
-    byteBuffer.get(bytes)
-    def inputStream = new java.io.ByteArrayInputStream(bytes)
-
-    def workbook
-    try {
-        workbook = WorkbookFactory.create(inputStream)
-    } catch (Exception e) {
-        return error("Cannot open Excel file: ${e.message}. Ensure file is .xlsx or .xls format.")
-    }
-
-    def sheet = workbook.getSheetAt(0)
-    def previewList = []
-    def errorList   = []
-    def warnings    = []
+def parseSheet(sheet, sql, previewOnly) {
+    def previewList  = []
+    def errorList    = []
+    def warnings     = []
     def addedCount   = 0
     def updatedCount = 0
     def skippedCount = 0
-
-    def getCellString = { cell ->
-        if (cell == null) return ""
-        switch (cell.getCellType()) {
-            case CellType.STRING:  return cell.getStringCellValue()?.trim() ?: ""
-            case CellType.NUMERIC: return String.valueOf((long) cell.getNumericCellValue())
-            case CellType.BOOLEAN: return cell.getBooleanCellValue() ? "Y" : "N"
-            default: return ""
-        }
-    }
-
     def rowNum = 0
+
     sheet.each { row ->
         rowNum++
-        if (rowNum == 1) return // skip header
+        if (rowNum == 1) return
 
-        def employeeId = getCellString(row.getCell(0))
-        def fullName   = getCellString(row.getCell(1))
-        def username   = getCellString(row.getCell(2))
-        def department = getCellString(row.getCell(3))
-        def position   = getCellString(row.getCell(4))
-        def quotaStr   = getCellString(row.getCell(5))
-        def vlanStr    = getCellString(row.getCell(6)).toUpperCase()
-        def notes      = getCellString(row.getCell(7))
+        def empId = getCellStr(row.getCell(0))
+        def fname = getCellStr(row.getCell(1))
+        def uname = getCellStr(row.getCell(2))
+        def dept  = getCellStr(row.getCell(3))
+        def pos   = getCellStr(row.getCell(4))
+        def quota = (getCellStr(row.getCell(5)) ?: "2") as Integer
+        def vlan10 = getCellStr(row.getCell(6)).toUpperCase() in ["Y","YES","TRUE"]
+        def notes = getCellStr(row.getCell(7))
 
-        // Skip blank rows
-        if (!employeeId && !username) { skippedCount++; return }
+        if (!empId && !uname) { skippedCount++; return }
+        if (!empId) { errorList.add("Row ${rowNum}: Missing Employee ID"); return }
+        if (!fname) { errorList.add("Row ${rowNum}: Missing Full Name"); return }
+        if (!uname) { errorList.add("Row ${rowNum}: Missing Username"); return }
 
-        // Validate required
-        if (!employeeId) { errorList.add("Row ${rowNum}: Missing Employee ID"); return }
-        if (!fullName)   { errorList.add("Row ${rowNum}: Missing Full Name"); return }
-        if (!username)   { errorList.add("Row ${rowNum}: Missing Username"); return }
+        def existing = sql.firstRow(
+            "SELECT ftm_staff_vlan10 FROM authorized_users WHERE employee_id=?",
+            [empId.toString()])
 
-        def quota  = quotaStr ? (quotaStr as Integer) : 2
-        def vlan10 = (vlanStr == "Y" || vlanStr == "YES" || vlanStr == "TRUE")
+        def action = existing ? "UPDATE" : "ADD"
+        if (existing && existing.ftm_staff_vlan10 != vlan10)
+            warnings.add("Row ${rowNum}: VLAN change for [${uname}] — re-enrollment required.")
 
-        def rowData = [
-            employeeId: employeeId, fullName: fullName, username: username,
-            department: department, position: position, deviceQuota: quota,
-            ftmStaffVlan10: vlan10, notes: notes, action: "?"
-        ]
-
-        // Check existing
-        def existing = EntityQuery.use(ftmDelegator)
-            .from("FtmAuthorizedUser")
-            .where("employeeId", employeeId)
-            .queryFirst()
-
-        if (existing) {
-            // Check VLAN change warning
-            def oldVlan = existing.getBoolean("ftmStaffVlan10") ?: false
-            if (oldVlan != vlan10) {
-                warnings.add("Row ${rowNum}: VLAN tier change for [${username}] — " +
-                    "device re-enrollment required.")
-            }
-            rowData.action = "UPDATE"
-            if (!previewOnly) {
-                ftmDelegator.withConnection("ftmEnrollmentDataSource") { conn ->
-                    def stmt = conn.prepareStatement("""
-                        UPDATE authorized_users SET
-                            full_name=?, department=?, position=?,
-                            device_quota=?, ftm_staff_vlan10=?, notes=?
-                        WHERE employee_id=?
-                    """)
-                    stmt.setString(1, fullName)
-                    stmt.setString(2, department ?: null)
-                    stmt.setString(3, position ?: null)
-                    stmt.setInt(4, quota)
-                    stmt.setBoolean(5, vlan10)
-                    stmt.setString(6, notes ?: null)
-                    stmt.setString(7, employeeId)
-                    stmt.executeUpdate()
-                    stmt.close()
-                }
-                updatedCount++
-            }
-        } else {
-            // Check username conflict
-            def existingUser = EntityQuery.use(ftmDelegator)
-                .from("FtmAuthorizedUser")
-                .where("username", username)
-                .queryFirst()
-            if (existingUser) {
-                errorList.add("Row ${rowNum}: Username [${username}] already taken by " +
-                    existingUser.getString("employeeId"))
+        if (!existing) {
+            def dup = sql.firstRow(
+                "SELECT employee_id FROM authorized_users WHERE username=?",
+                [uname.toString()])
+            if (dup) {
+                errorList.add("Row ${rowNum}: Username [${uname}] taken by ${dup.employee_id}")
                 return
             }
-            rowData.action = "ADD"
-            if (!previewOnly) {
-                ftmDelegator.withConnection("ftmEnrollmentDataSource") { conn ->
-                    def stmt = conn.prepareStatement("""
-                        INSERT INTO authorized_users
-                            (employee_id, full_name, username, department, position,
-                             device_quota, ftm_staff_vlan10, notes, active)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, TRUE)
-                    """)
-                    stmt.setString(1, employeeId)
-                    stmt.setString(2, fullName)
-                    stmt.setString(3, username)
-                    stmt.setString(4, department ?: null)
-                    stmt.setString(5, position ?: null)
-                    stmt.setInt(6, quota)
-                    stmt.setBoolean(7, vlan10)
-                    stmt.setString(8, notes ?: null)
-                    stmt.executeUpdate()
-                    stmt.close()
-                }
+        }
+
+        if (!previewOnly) {
+            if (existing) {
+                sql.execute("""UPDATE authorized_users SET
+                    full_name=?, department=?, position=?,
+                    device_quota=?, ftm_staff_vlan10=?, notes=?
+                    WHERE employee_id=?""",
+                    [fname.toString(), dept?.toString()?:null, pos?.toString()?:null,
+                     quota, vlan10, notes?.toString()?:null, empId.toString()])
+                updatedCount++
+            } else {
+                sql.execute("""INSERT INTO authorized_users
+                    (employee_id,full_name,username,department,position,
+                     device_quota,ftm_staff_vlan10,notes,active)
+                    VALUES(?,?,?,?,?,?,?,?,TRUE)""",
+                    [empId.toString(), fname.toString(), uname.toString(),
+                     dept?.toString()?:null, pos?.toString()?:null,
+                     quota, vlan10, notes?.toString()?:null])
                 addedCount++
             }
         }
-        previewList.add(rowData)
+        previewList.add([employeeId:empId, fullName:fname, username:uname,
+            department:dept, position:pos, deviceQuota:quota,
+            ftmStaffVlan10:vlan10, action:action])
     }
-
-    workbook.close()
-
-    result.previewList   = previewList
-    result.addedCount    = previewOnly ? 0 : addedCount
-    result.updatedCount  = previewOnly ? 0 : updatedCount
-    result.skippedCount  = skippedCount
-    result.errorList     = errorList
-    result.warnings      = warnings
-    return result
+    return [previewList:previewList, errorList:errorList, warnings:warnings,
+            addedCount:addedCount, updatedCount:updatedCount, skippedCount:skippedCount]
 }
 
-return importFtmUsersFromExcel()
+// ── SERVICE entry point (invoke="importFtmUsersFromExcel") ──────────────────
+def importFtmUsersFromExcel() {
+    if (!parameters.uploadedFile) return error("No file uploaded")
+    def bytes = new byte[parameters.uploadedFile.remaining()]
+    parameters.uploadedFile.get(bytes)
+    def workbook
+    try {
+        workbook = WorkbookFactory.create(new java.io.ByteArrayInputStream(bytes))
+    } catch (Exception e) {
+        return error("Cannot open Excel: ${e.message}")
+    }
+    def sql = Sql.newInstance(JDBC_URL, JDBC_USER, JDBC_PASS, JDBC_DRIVER)
+    try {
+        def result = parseSheet(workbook.getSheetAt(0), sql, parameters.previewOnly ?: false)
+        return success(result)
+    } finally {
+        sql.close()
+        workbook.close()
+    }
+}
+
+// ── GROOVY EVENT entry point (invoke="previewImport") ─────────────────────
+def previewImport() {
+    // OFBiz already parsed multipart in UtilHttp.getParameterMap before calling event
+    // The ByteBuffer is in the existing multiPartMap request attribute
+    def multiPartMap = request.getAttribute("multiPartMap")
+
+    def bb = multiPartMap?.get("uploadedFile")
+    if (!bb) {
+        // Last resort: try re-parsing
+        def freshMap = UtilHttp.getMultiPartParameterMap(request)
+        bb = freshMap?.get("uploadedFile")
+    }
+    if (!bb) {
+        request.setAttribute("_ERROR_MESSAGE_",
+            "No file. multiPartMap keys=${multiPartMap?.keySet()} contentType=${request.getContentType()} method=${request.getMethod()}")
+        return "error"
+    }
+
+
+    def bytes = new byte[bb.remaining()]
+    bb.get(bytes)
+    // Store for CommitWifiImport
+    request.getSession().setAttribute("importFileBytes", bytes)
+
+    def workbook
+    try {
+        workbook = WorkbookFactory.create(new java.io.ByteArrayInputStream(bytes))
+    } catch (Exception e) {
+        request.setAttribute("_ERROR_MESSAGE_", "Cannot open Excel: ${e.message}")
+        return "error"
+    }
+
+    def sql = Sql.newInstance(JDBC_URL, JDBC_USER, JDBC_PASS, JDBC_DRIVER)
+    try {
+        def result = parseSheet(workbook.getSheetAt(0), sql, true)
+        def pl = result.previewList
+        def el = result.errorList
+        if (pl == null || pl.isEmpty()) {
+            request.setAttribute("_ERROR_MESSAGE_",
+                "parseSheet returned empty. errorList=" + el + " sheetRows=" + workbook.getSheetAt(0).getPhysicalNumberOfRows())
+            return "error"
+        }
+        request.setAttribute("previewList",  pl)
+        request.setAttribute("errorList",    el)
+        request.setAttribute("warnings",     result.warnings)
+        return "success"
+    } finally {
+        sql.close()
+        workbook.close()
+    }
+}
+
+// Router — called by OFBiz based on invoke= in controller/service
+return previewImport()

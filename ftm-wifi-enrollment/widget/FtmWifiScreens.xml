@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <screens xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-screen.xsd">
+    xmlns="http://ofbiz.apache.org/Widget-Screen"
+    xsi:schemaLocation="http://ofbiz.apache.org/Widget-Screen http://ofbiz.apache.org/dtds/widget-screen.xsd">
 
     <!-- Main decorator -->
     <screen name="main-decorator">
         <section>
             <widgets>
                 <decorator-screen name="main-decorator"
-                    location="component://common/widget/CommonScreens.xml">
+                    location="${parameters.mainDecoratorLocation}">
                     <decorator-section name="pre-body">
                         <include-menu name="FtmWifiAppBar"
                             location="component://ftm-wifi-enrollment/widget/FtmWifiMenus.xml"/>
@@ -27,19 +28,22 @@
                 <service service-name="getFtmAuthorizedUsers" result-map="serviceResult">
                     <field-map field-name="department"  from-field="parameters.department"/>
                     <field-map field-name="vlanTier"    from-field="parameters.vlanTier"/>
-                    <field-map field-name="activeOnly"  value="true"/>
+                    <field-map field-name="activeOnly"  value="false"/>
                 </service>
                 <set field="userList"  from-field="serviceResult.userList"/>
                 <set field="userCount" from-field="serviceResult.userCount"/>
             </actions>
             <widgets>
-                <decorator-screen name="main-decorator">
+                <decorator-screen name="main-decorator" location="${parameters.mainDecoratorLocation}">
                     <decorator-section name="body">
                         <screenlet title="WiFi Authorized Users (${userCount} total)">
                             <include-form name="FindUsersFilter"
                                 location="component://ftm-wifi-enrollment/widget/FtmWifiForms.xml"/>
                         </screenlet>
                         <screenlet title="User List">
+                            <link text="Export CSV"
+                                target="ExportAuthorizedUsersCsv"
+                                style="buttontext" url-mode="intra-app"/>
                             <include-form name="AuthorizedUserList"
                                 location="component://ftm-wifi-enrollment/widget/FtmWifiForms.xml"/>
                         </screenlet>
@@ -53,23 +57,21 @@
     <screen name="EditAuthorizedUser">
         <section>
             <actions>
-                <set field="employeeId" from-field="parameters.employeeId"/>
-                <entity-and entity-name="FtmAuthorizedUser" list="userList"
-                    delegator-name="ftmEnrollment">
-                    <field-map field-name="employeeId" from-field="employeeId"/>
-                </entity-and>
-                <set field="user" from-field="userList[0]"/>
-                <set field="titleProperty"
-                    value="${user?.fullName ? 'Edit User: ' + user.fullName : 'Add New User'}"/>
+                <script location="component://ftm-wifi-enrollment/groovyScripts/ftm/wifi/EditUserActions.groovy"/>
             </actions>
             <widgets>
-                <decorator-screen name="main-decorator">
+                <decorator-screen name="main-decorator" location="${parameters.mainDecoratorLocation}">
                     <decorator-section name="body">
                         <screenlet title="${titleProperty}">
                             <include-form name="EditUserForm"
                                 location="component://ftm-wifi-enrollment/widget/FtmWifiForms.xml"/>
+                            <platform-specific>
+                                <html><html-template
+                                    location="component://ftm-wifi-enrollment/template/DeleteUserButton.ftl"/>
+                                </html>
+                            </platform-specific>
                         </screenlet>
-                        <screenlet title="Enrolled Devices" condition="user != null">
+                        <screenlet title="Enrolled Devices">
                             <include-form name="EnrolledDevicesList"
                                 location="component://ftm-wifi-enrollment/widget/FtmWifiForms.xml"/>
                         </screenlet>
@@ -83,7 +85,7 @@
     <screen name="ImportWifiUsers">
         <section>
             <widgets>
-                <decorator-screen name="main-decorator">
+                <decorator-screen name="main-decorator" location="${parameters.mainDecoratorLocation}">
                     <decorator-section name="body">
                         <screenlet title="Import Staff from Excel">
                             <include-form name="UploadExcelForm"
@@ -102,15 +104,15 @@
     <screen name="ImportPreview">
         <section>
             <actions>
-                <set field="previewList"  from-field="serviceResult.previewList"/>
-                <set field="errorList"    from-field="serviceResult.errorList"/>
-                <set field="warnings"     from-field="serviceResult.warnings"/>
+                <script location="component://ftm-wifi-enrollment/groovyScripts/ftm/wifi/ImportPreviewActions.groovy"/>
             </actions>
             <widgets>
-                <decorator-screen name="main-decorator">
+                <decorator-screen name="main-decorator" location="${parameters.mainDecoratorLocation}">
                     <decorator-section name="body">
                         <screenlet title="Import Preview — Review Before Committing">
                             <include-form name="ImportPreviewTable"
+                                location="component://ftm-wifi-enrollment/widget/FtmWifiForms.xml"/>
+                            <include-form name="ImportCommitForm"
                                 location="component://ftm-wifi-enrollment/widget/FtmWifiForms.xml"/>
                         </screenlet>
                     </decorator-section>
@@ -122,14 +124,10 @@
     <screen name="ImportSummary">
         <section>
             <actions>
-                <set field="addedCount"   from-field="serviceResult.addedCount"/>
-                <set field="updatedCount" from-field="serviceResult.updatedCount"/>
-                <set field="skippedCount" from-field="serviceResult.skippedCount"/>
-                <set field="errorList"    from-field="serviceResult.errorList"/>
-                <set field="warnings"     from-field="serviceResult.warnings"/>
+                <script location="component://ftm-wifi-enrollment/groovyScripts/ftm/wifi/ImportSummaryActions.groovy"/>
             </actions>
             <widgets>
-                <decorator-screen name="main-decorator">
+                <decorator-screen name="main-decorator" location="${parameters.mainDecoratorLocation}">
                     <decorator-section name="body">
                         <screenlet title="Import Complete">
                             <label>Added: ${addedCount} | Updated: ${updatedCount} | Skipped: ${skippedCount}</label>
