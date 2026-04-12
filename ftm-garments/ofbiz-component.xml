@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ofbiz-component name="ftm-garments"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/ofbiz-component.xsd">
+
+    <resource-loader name="main" type="component"/>
+
+    <entity-resource type="model" reader-name="main" loader="main"
+        location="entitydef/entitymodel.xml"/>
+
+    <service-resource type="model" loader="main"
+        location="servicedef/services.xml"/>
+
+    <webapp name="ftm-garments"
+        title="FTM Garments"
+        server="default-server"
+        location="webapp/ftm-garments"
+        base-permission="OFBTOOLS"
+        mount-point="/ftm-garments"/>
+
+</ofbiz-component>

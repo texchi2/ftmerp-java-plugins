@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<screens xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/screen-definition.xsd">
+
+    <screen name="FindStyles">
+        <section>
+            <actions>
+                <service service-name="getFtmStyles" result-map="serviceResult">
+                    <field-map field-name="buyer"       from-field="parameters.buyer"/>
+                    <field-map field-name="productType" from-field="parameters.productType"/>
+                    <field-map field-name="status"      from-field="parameters.status"/>
+                </service>
+                <set field="styleList"  from-field="serviceResult.styleList"/>
+                <set field="styleCount" from-field="serviceResult.styleCount"/>
+            </actions>
+            <widgets>
+                <decorator-screen name="main-decorator"
+                    location="${parameters.mainDecoratorLocation}">
+                    <decorator-section name="body">
+                        <screenlet title="FTM Styles (${styleCount} total)">
+                            <include-form name="FindStylesFilter"
+                                location="component://ftm-garments/widget/FtmGarmentsForms.xml"/>
+                        </screenlet>
+                        <screenlet title="Style List">
+                            <include-form name="StyleList"
+                                location="component://ftm-garments/widget/FtmGarmentsForms.xml"/>
+                        </screenlet>
+                    </decorator-section>
+                </decorator-screen>
+            </widgets>
+        </section>
+    </screen>
+
+</screens>

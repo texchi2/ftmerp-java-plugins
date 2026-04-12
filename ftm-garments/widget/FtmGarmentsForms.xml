@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<forms xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/form-definition.xsd">
+
+    <form name="FindStylesFilter" type="single" target="FindStyles">
+        <field name="buyer" title="Buyer"><text-find/></field>
+        <field name="productType" title="Product Type">
+            <drop-down allow-empty="true">
+                <option key="" description="-- All --"/>
+                <option key="PANTS"   description="Pants/Trousers"/>
+                <option key="SHIRT"   description="Shirts"/>
+                <option key="JACKET"  description="Jackets"/>
+                <option key="DRESS"   description="Dresses"/>
+            </drop-down>
+        </field>
+        <field name="status" title="Status">
+            <drop-down allow-empty="true">
+                <option key=""        description="-- All --"/>
+                <option key="ACTIVE"  description="Active"/>
+                <option key="SAMPLING" description="Sampling"/>
+                <option key="INACTIVE" description="Inactive"/>
+            </drop-down>
+        </field>
+        <field name="searchButton" title="Search">
+            <submit button-type="button"/>
+        </field>
+    </form>
+
+    <form name="StyleList" type="list" list-name="styleList"
+        default-table-style="basic-table hover-bar">
+        <field name="styleNumber"   title="Style No"><display/></field>
+        <field name="buyer"         title="Buyer">   <display/></field>
+        <field name="description"   title="Description"><display/></field>
+        <field name="productType"   title="Type">    <display/></field>
+        <field name="season"        title="Season">  <display/></field>
+        <field name="status"        title="Status">  <display/></field>
+    </form>
+
+</forms>
