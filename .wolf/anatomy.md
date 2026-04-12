@@ -1,7 +1,7 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-04-07T22:00:00.893Z
-> Files: 509 tracked | Anatomy hits: 0 | Misses: 0
+> Auto-maintained by OpenWolf. Last scanned: 2026-04-11T11:11:08.900Z
+> Files: 520 tracked | Anatomy hits: 0 | Misses: 0
 
 ## ./
 
@@ -940,3 +940,32 @@
 - `CcInfo.ftl` (~318 tok)
 - `CheckoutOptions.ftl` — Declares submitForm (~6583 tok)
 - `CheckoutPayment.ftl` — Declares submitForm (~3948 tok)
+
+## ftm-garments/
+
+- `build.gradle` (~24 tok)
+- `ofbiz-component.xml` (~190 tok)
+
+## ftm-garments/entitydef/
+
+- `entitymodel.xml` (~362 tok)
+
+## ftm-garments/groovyScripts/ftm/garments/
+
+- `GetStyles.groovy` (~231 tok)
+
+## ftm-garments/servicedef/
+
+- `services.xml` (~359 tok)
+
+## ftm-garments/webapp/ftm-garments/WEB-INF/
+
+- `controller.xml` (~227 tok)
+- `web.xml` (~572 tok)
+
+## ftm-garments/widget/
+
+- `FtmGarmentsCommonScreens.xml` (~245 tok)
+- `FtmGarmentsForms.xml` (~494 tok)
+- `FtmGarmentsMenus.xml` (~107 tok)
+- `FtmGarmentsScreens.xml` (~452 tok)

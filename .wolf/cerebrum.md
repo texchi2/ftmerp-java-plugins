@@ -67,3 +67,17 @@ Script-level vars need @groovy.transform.Field to be accessible in methods.
 
 ### Deactivate ≠ Delete
 Deactivate = SET active=FALSE (reversible). Delete = permanent with JS confirm FTL.
+
+## Phase 8A Lessons Learned (Apr 12 2026)
+
+### Critical OFBiz plugin rules confirmed:
+1. ofbiz-component.xml name= MUST match plugin dir name (not copy from another plugin)
+2. mainDecoratorLocation in web.xml MUST point to *CommonScreens.xml (separate file)
+   - NOT to the main screens file (causes decorator recursion/not-found error)
+3. main-decorator screen MUST be in its own CommonScreens.xml → ApplicationDecorator
+4. Menu file MUST define the exact menu name referenced in CommonScreens.xml
+5. FtmStyleNumber is Derby (default delegator) → use EntityQuery.use(delegator)
+   NOT Sql.newInstance/JDBC (causes 216s transaction timeout)
+6. Groovy scripts hot-reload; web.xml and ofbiz-component.xml require restart
+7. auth= attribute: only ONE per <service> element; sed append creates duplicates
+8. Derby lock files: remove BOTH dbex.lck AND db.lck before restart
