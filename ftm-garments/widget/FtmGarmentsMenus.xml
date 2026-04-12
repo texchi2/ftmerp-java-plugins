@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<menus xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns="http://ofbiz.apache.org/Widget-Menu"
+    xsi:schemaLocation="http://ofbiz.apache.org/Widget-Menu
+        http://ofbiz.apache.org/dtds/widget-menu.xsd">
+
+    <menu name="FtmGarmentsAppBar" type="simple"
+        extends="CommonAppBarMenu"
+        extends-resource="component://common/widget/CommonMenus.xml">
+        <menu-item name="main" title="Main">
+            <link target="main"/>
+        </menu-item>
+        <menu-item name="FindStyles" title="Style Numbers">
+            <link target="FindStyles"/>
+        </menu-item>
+    </menu>
+
+</menus>
