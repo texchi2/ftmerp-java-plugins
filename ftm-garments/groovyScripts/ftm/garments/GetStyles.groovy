@@ -14,7 +14,7 @@ def getFtmStyles() {
     if (conditions) query = query.where(EntityCondition.makeCondition(conditions, EntityOperator.AND))
 
     def styleList = query.queryList()?.collect { row ->
-        [styleId: row.styleId, buyer: row.buyer,
+        [styleId: row.styleNumberId, buyer: row.buyer,
          productType: row.productType, status: row.status,
          description: row.description]
     } ?: []
