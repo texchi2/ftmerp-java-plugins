@@ -16,6 +16,9 @@
         <response name="success" type="view" value="FindStyles"/>
     </request-map>
 
+    <view-map name="main" type="screen"
+        page="component://ftm-garments/widget/FtmGarmentsScreens.xml#FindStyles"/>
+
     <view-map name="FindStyles" type="screen"
         page="component://ftm-garments/widget/FtmGarmentsScreens.xml#FindStyles"/>
 </site-conf>

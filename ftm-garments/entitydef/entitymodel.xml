@@ -6,7 +6,7 @@
     <description>Entity definitions for FTM Garments customizations</description>
     <version>1.0</version>
 
-    <entity entity-name="FtmStyleNumber" package-name="com.ftm.garments"
+    <entity entity-name="FtmStyleNumber" package-name="org.apache.ofbiz.ftm.garments"
         title="FTM Style Number" author="FTM Garments" version="1.0">
         <field name="styleNumberId"    type="id"/>
         <field name="styleNumber"      type="short-varchar"/>
