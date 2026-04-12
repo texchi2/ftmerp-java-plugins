@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<screens xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/screen-definition.xsd">
+<screens xmlns="http://ofbiz.apache.org/Widget-Screen"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://ofbiz.apache.org/Widget-Screen http://ofbiz.apache.org/dtds/widget-screen.xsd">
 
     <screen name="FindStyles">
         <section>

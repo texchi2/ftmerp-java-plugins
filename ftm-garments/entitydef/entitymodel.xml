@@ -15,14 +15,11 @@
         <field name="productType"      type="short-varchar"/>
         <field name="productCategory"  type="short-varchar"/>
         <field name="season"           type="short-varchar"/>
-        <field name="status"           type="short-varchar"/>
+        <field name="status" type="short-varchar" col-name="style_status"/>
         <field name="productId"        type="id"/>
         <field name="createdDate"      type="date-time"/>
         <field name="lastModifiedDate" type="date-time"/>
         <prim-key field="styleNumberId"/>
-        <relation type="one" rel-entity-name="Product" fk-name="FTM_STYNO_PRD">
-            <key-map field-name="productId"/>
-        </relation>
     </entity>
 
 </entitymodel>
