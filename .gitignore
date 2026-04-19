@@ -21,3 +21,14 @@ pricat/pricat
 projectmgr/projectmgr
 scrum/scrum
 webpos/webpos
+
+# OpenWolf — machine-specific state (do NOT sync)
+.wolf/hooks/_session.json
+.wolf/token-ledger.json
+.wolf/anatomy.md
+
+# OpenWolf — valuable knowledge (DO sync)
+# .wolf/memory.md        ← kept in git
+# .wolf/cerebrum.md      ← kept in git
+# .wolf/config.json      ← kept in git
+
