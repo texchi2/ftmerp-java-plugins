@@ -43,7 +43,6 @@
 
     <servlet>
         <servlet-name>ControlServlet</servlet-name>
-        <display-name>ControlServlet</display-name>
         <servlet-class>org.apache.ofbiz.webapp.control.ControlServlet</servlet-class>
         <load-on-startup>1</load-on-startup>
     </servlet>

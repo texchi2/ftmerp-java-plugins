@@ -6,10 +6,53 @@
     <vendor>FTM Garments Swaziland</vendor>
     <version>1.0</version>
 
-    <service name="createFtmStyleNumber" default-entity-name="FtmStyleNumber" engine="entity-auto" invoke="create" auth="true">
+    <service name="getFtmStyle" engine="groovy"
+        location="component://ftm-garments/groovyScripts/ftm/garments/FtmStyleNumberServices.groovy"
+        invoke="getFtmStyle" auth="false">
+        <description>Get a single FTM Style Number</description>
+        <attribute name="styleNumberId" type="String" mode="IN" optional="false"/>
+        <attribute name="styleNumber"   type="String" mode="OUT" optional="true"/>
+        <attribute name="buyer"         type="String" mode="OUT" optional="true"/>
+        <attribute name="description"   type="String" mode="OUT" optional="true"/>
+        <attribute name="productType"   type="String" mode="OUT" optional="true"/>
+        <attribute name="productCategory" type="String" mode="OUT" optional="true"/>
+        <attribute name="season"        type="String" mode="OUT" optional="true"/>
+        <attribute name="status"        type="String" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="createFtmStyleNumber" engine="groovy"
+        location="component://ftm-garments/groovyScripts/ftm/garments/FtmStyleNumberServices.groovy"
+        invoke="createFtmStyleNumber" auth="true">
         <description>Create FTM Style Number</description>
-        <auto-attributes include="pk" mode="OUT" optional="false"/>
-        <auto-attributes include="nonpk" mode="IN" optional="true"/>
+        <attribute name="styleNumber"      type="String"  mode="IN" optional="false"/>
+        <attribute name="buyer"            type="String"  mode="IN" optional="false"/>
+        <attribute name="description"      type="String"  mode="IN" optional="true"/>
+        <attribute name="productType"      type="String"  mode="IN" optional="false"/>
+        <attribute name="productCategory"  type="String"  mode="IN" optional="true"/>
+        <attribute name="season"           type="String"  mode="IN" optional="true"/>
+        <attribute name="status"           type="String"  mode="IN" optional="false"/>
+        <attribute name="styleNumberId"    type="String"  mode="OUT" optional="false"/>
+    </service>
+
+    <service name="updateFtmStyleNumber" engine="groovy"
+        location="component://ftm-garments/groovyScripts/ftm/garments/FtmStyleNumberServices.groovy"
+        invoke="updateFtmStyleNumber" auth="true">
+        <description>Update FTM Style Number</description>
+        <attribute name="styleNumberId"    type="String"  mode="IN" optional="false"/>
+        <attribute name="styleNumber"      type="String"  mode="IN" optional="true"/>
+        <attribute name="buyer"            type="String"  mode="IN" optional="true"/>
+        <attribute name="description"      type="String"  mode="IN" optional="true"/>
+        <attribute name="productType"      type="String"  mode="IN" optional="true"/>
+        <attribute name="productCategory"  type="String"  mode="IN" optional="true"/>
+        <attribute name="season"           type="String"  mode="IN" optional="true"/>
+        <attribute name="status"           type="String"  mode="IN" optional="true"/>
+    </service>
+
+    <service name="deleteFtmStyleNumber" engine="groovy"
+        location="component://ftm-garments/groovyScripts/ftm/garments/FtmStyleNumberServices.groovy"
+        invoke="deleteFtmStyleNumber" auth="true">
+        <description>Delete FTM Style Number</description>
+        <attribute name="styleNumberId"    type="String"  mode="IN" optional="false"/>
     </service>
 
     <service name="getFtmStyles" engine="groovy"

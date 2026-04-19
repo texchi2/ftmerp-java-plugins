@@ -11,6 +11,9 @@
     <service-resource type="model" loader="main"
         location="servicedef/services.xml"/>
 
+    <widget-resource type="screen" location="widget/FtmGarmentsCommonScreens.xml"/>
+    <widget-resource type="screen" location="widget/FtmGarmentsScreens.xml"/>
+
     <webapp name="ftm-garments"
         title="FTM Garments"
         server="default-server"

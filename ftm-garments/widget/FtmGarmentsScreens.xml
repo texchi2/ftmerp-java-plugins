@@ -20,11 +20,11 @@
                     <decorator-section name="body">
                         <screenlet title="FTM Styles (${styleCount} total)">
                             <include-form name="FindStylesFilter"
-                                location="component://ftm-garments/widget/FtmGarmentsForms.xml"/>
+                               location="component://ftm-garments/widget/FtmGarmentsForms.xml"/>
                         </screenlet>
                         <screenlet title="Style List">
                             <include-form name="StyleList"
-                                location="component://ftm-garments/widget/FtmGarmentsForms.xml"/>
+                               location="component://ftm-garments/widget/FtmGarmentsForms.xml"/>
                         </screenlet>
                     </decorator-section>
                 </decorator-screen>
@@ -32,4 +32,57 @@
         </section>
     </screen>
 
+    <screen name="CreateStyle">
+        <section>
+            <widgets>
+                <decorator-screen name="main-decorator"
+                    location="${parameters.mainDecoratorLocation}">
+                    <decorator-section name="body">
+                        <screenlet title="Create New Style Number">
+                            <include-form name="StyleNumberForm"
+                               location="component://ftm-garments/widget/FtmGarmentsForms.xml"/>
+                        </screenlet>
+                    </decorator-section>
+                </decorator-screen>
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="EditStyle">
+        <section>
+            <actions>
+                <service service-name="getFtmStyle" result-map="style">
+                    <field-map field-name="styleNumberId" from-field="parameters.styleNumberId"/>
+                </service>
+            </actions>
+            <widgets>
+                <decorator-screen name="main-decorator"
+                    location="${parameters.mainDecoratorLocation}">
+                    <decorator-section name="body">
+                        <screenlet title="Edit Style Number">
+                            <include-form name="StyleNumberForm"
+                               location="component://ftm-garments/widget/FtmGarmentsForms.xml"/>
+                        </screenlet>
+                    </decorator-section>
+                </decorator-screen>
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="DeleteStyle">
+        <section>
+            <widgets>
+                <decorator-screen name="main-decorator"
+                    location="${parameters.mainDecoratorLocation}">
+                    <decorator-section name="body">
+                        <screenlet title="Delete Style Number">
+                            <label text="Are you sure you want to delete style ${parameters.styleNumberId}?"/>
+                            <include-form name="DeleteConfirm"
+                               location="component://ftm-garments/widget/FtmGarmentsForms.xml"/>
+                        </screenlet>
+                    </decorator-section>
+                </decorator-screen>
+            </widgets>
+        </section>
+    </screen>
 </screens>
