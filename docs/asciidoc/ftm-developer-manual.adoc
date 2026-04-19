@@ -133,7 +133,7 @@ Script-level `def` variables are NOT accessible inside methods. Use `@groovy.tra
 ----
 @groovy.transform.Field String JDBC_URL  = "jdbc:postgresql://192.168.30.3:5432/ftm_enrollment"
 @groovy.transform.Field String JDBC_USER = "enrolladmin"
-@groovy.transform.Field String JDBC_PASS = System.getenv("FTM_ENROLLMENT_DB_PASS") ?: "ftmscep2026"
+@groovy.transform.Field String JDBC_PASS = System.getenv("FTM_ENROLLMENT_DB_PASS") ?: "SECRET_STRONG_PASSWORD"
 
 @groovy.transform.Field
 def getCellStr = { cell ->
