@@ -25,16 +25,64 @@
         <field name="searchButton" title="Search">
             <submit button-type="button"/>
         </field>
+	<field name="createButton" title=" ">
+		<hyperlink description="Create New Style"
+                target="CreateStyle" also-hidden="false"/>
+        </field>
     </form>
 
     <form name="StyleList" type="list" list-name="styleList"
         default-table-style="basic-table hover-bar">
-        <field name="styleNumber"   title="Style No"><display/></field>
+        <field name="styleNumber"   title="Style No">
+            <hyperlink description="${styleNumber}" target="EditStyle">
+                <parameter param-name="styleNumberId"/>
+            </hyperlink>
+        </field>
         <field name="buyer"         title="Buyer">   <display/></field>
         <field name="description"   title="Description"><display/></field>
         <field name="productType"   title="Type">    <display/></field>
         <field name="season"        title="Season">  <display/></field>
         <field name="status"        title="Status">  <display/></field>
+    </form>
+
+    <form name="StyleNumberForm" type="single" target="SaveStyle">
+        <field name="styleNumberId" title="Style ID"><text-find/></field>
+        <field name="styleNumber" title="Style Number"><text/></field>
+        <field name="buyer" title="Buyer"><text/></field>
+        <field name="description" title="Description"><textarea/></field>
+        <field name="productType" title="Product Type">
+            <drop-down allow-empty="false">
+                <option key="PANTS"   description="Pants/Trousers"/>
+                <option key="SHIRT"   description="Shirts"/>
+                <option key="JACKET"  description="Jackets"/>
+                <option key="DRESS"   description="Dresses"/>
+            </drop-down>
+        </field>
+        <field name="productCategory" title="Category"><text/></field>
+        <field name="season" title="Season"><text/></field>
+        <field name="status" title="Status">
+            <drop-down allow-empty="false">
+                <option key="ACTIVE"  description="Active"/>
+                <option key="SAMPLING" description="Sampling"/>
+                <option key="INACTIVE" description="Inactive"/>
+            </drop-down>
+        </field>
+        <field name="saveButton" title="Save">
+            <submit button-type="button"/>
+        </field>
+        <field name="cancelButton" title="Cancel">
+            <submit button-type="button" target="FindStyles"/>
+        </field>
+    </form>
+
+    <form name="DeleteConfirm" type="single" target="ConfirmDelete">
+        <field name="styleNumberId" title="Style ID"><text/></field>
+        <field name="confirmButton" title="Delete">
+            <submit button-type="button"/>
+        </field>
+        <field name="cancelButton" title="Cancel">
+            <submit button-type="button" target="FindStyles"/>
+        </field>
     </form>
 
 </forms>

@@ -3,11 +3,12 @@
    >
 
     <include location="component://common/webcommon/WEB-INF/common-controller.xml"/>
-    <description>FTM Garments Management</description>
-    <owner>FTM Garments Swaziland (PTY) LTD</owner>
+    <event name="saveStyleEvent" invoke="saveStyle"/>
+    <event name="deleteStyleEvent" invoke="deleteStyle"/>
 
     <request-map uri="main">
         <security https="false" auth="true"/>
+        <event type="groovy" invoke="org.apache.ofbiz.common.CommonEvents.checkLogin"/>
         <response name="success" type="view" value="FindStyles"/>
     </request-map>
 
@@ -16,9 +17,47 @@
         <response name="success" type="view" value="FindStyles"/>
     </request-map>
 
+    <request-map uri="CreateStyle">
+        <security https="false" auth="true"/>
+        <response name="success" type="view" value="CreateStyle"/>
+    </request-map>
+
+    <request-map uri="EditStyle">
+        <security https="false" auth="true"/>
+        <response name="success" type="view" value="EditStyle"/>
+    </request-map>
+
+    <request-map uri="DeleteStyle">
+        <security https="false" auth="true"/>
+        <response name="success" type="view" value="DeleteStyle"/>
+    </request-map>
+
+    <request-map uri="SaveStyle">
+        <security https="false" auth="true"/>
+        <event worktitle="Saving Style Number" name="saveStyleEvent"/>
+        <response name="success" type="view" value="FindStyles"/>
+        <response name="error" type="view" value="EditStyle"/>
+    </request-map>
+
+    <request-map uri="ConfirmDelete">
+        <security https="false" auth="true"/>
+        <event worktitle="Deleting Style Number" name="deleteStyleEvent"/>
+        <response name="success" type="view" value="FindStyles"/>
+        <response name="error" type="view" value="DeleteStyle"/>
+    </request-map>
+
     <view-map name="main" type="screen"
         page="component://ftm-garments/widget/FtmGarmentsScreens.xml#FindStyles"/>
 
     <view-map name="FindStyles" type="screen"
         page="component://ftm-garments/widget/FtmGarmentsScreens.xml#FindStyles"/>
+
+    <view-map name="CreateStyle" type="screen"
+        page="component://ftm-garments/widget/FtmGarmentsScreens.xml#CreateStyle"/>
+
+    <view-map name="EditStyle" type="screen"
+        page="component://ftm-garments/widget/FtmGarmentsScreens.xml#EditStyle"/>
+
+    <view-map name="DeleteStyle" type="screen"
+        page="component://ftm-garments/widget/FtmGarmentsScreens.xml#DeleteStyle"/>
 </site-conf>
