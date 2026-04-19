@@ -1,0 +1,39 @@
+{
+  "_comment": "Copy to ~/.claude/settings.json and set environment variables",
+  "_setup": "See docs/dev-environment-setup.md for required env vars and .pgpass setup",
+  "_env_vars_required": [
+    "POSTGRES_MCP_BIN",
+    "OFBIZ_MCP_DB_URI",
+    "OFBIZ_PLUGINS_PATH",
+    "OFBIZ_FRAMEWORK_PATH",
+    "EXA_API_KEY",
+    "EXA_MCP_SERVER_PATH"
+  ],
+  "mcpServers": {
+    "ofbiz-postgres": {
+      "type": "stdio",
+      "command": "${POSTGRES_MCP_BIN}",
+      "args": ["--access-mode=restricted"],
+      "env": {
+        "DATABASE_URI": "${OFBIZ_MCP_DB_URI}"
+      }
+    },
+    "filesystem-local": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y", "@modelcontextprotocol/server-filesystem",
+        "${OFBIZ_PLUGINS_PATH}",
+        "${OFBIZ_FRAMEWORK_PATH}"
+      ]
+    },
+    "exa-search": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["${EXA_MCP_SERVER_PATH}"],
+      "env": {
+        "EXA_API_KEY": "${EXA_API_KEY}"
+      }
+    }
+  }
+}
