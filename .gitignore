@@ -35,11 +35,19 @@ CLAUDE.md
 # fix-ftm-garments.sh
 .hermes.md
  .wolf/memory.md        
-.wolf/*
-!.wolf/cerebrum.md
+.wolf/anatomy.md
+.wolf/memory.md
+.wolf/hooks/
+.wolf/token-ledger.json
+.wolf/config.json
+.wolf/OPENWOLF.md
+# cerebrum.md is NOT listed → it remains tracked
 # .wolf/cerebrum.md      ← kept in git
 # .wolf/config.json      ← kept in git
 
 .python-version
 
  fix-ftm-garments.sh
+.hermes.md
+.playwright-mcp
+
