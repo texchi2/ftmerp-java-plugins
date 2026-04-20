@@ -5,5 +5,8 @@
     "license": "Apache-2.0",
     "dependencies": {
         "jsgantt-improved": "^2.8.9"
-    }
+    },
+  "overrides": {
+    "form-data": ">=2.5.4"
+  }
 }
