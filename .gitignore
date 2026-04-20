@@ -33,3 +33,10 @@ webpos/webpos
 # .wolf/config.json      ← kept in git
 
 # fix-ftm-garments.sh
+.hermes.md
+.playwright-mcp
+
+# Root-level npm artifacts — not part of OFBiz build
+/package.json
+/package-lock.json
+/node_modules/
