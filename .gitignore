@@ -26,6 +26,7 @@ webpos/webpos
 .wolf/hooks/_session.json
 .wolf/token-ledger.json
 .wolf/anatomy.md
+CLAUDE.md
 
 # OpenWolf — valuable knowledge (DO sync)
 # .wolf/memory.md        ← kept in git
