@@ -26,11 +26,14 @@ webpos/webpos
 .wolf/hooks/_session.json
 .wolf/token-ledger.json
 .wolf/anatomy.md
+CLAUDE.md
+.wolf/memory.md
+.wolf/hooks/
+.wolf/config.json
+.wolf/OPENWOLF.md
 
+# cerebrum.md is NOT listed → it remains tracked
 # OpenWolf — valuable knowledge (DO sync)
- .wolf/memory.md        
-.wolf/*
-!.wolf/cerebrum.md
 # .wolf/cerebrum.md      ← kept in git
 # .wolf/config.json      ← kept in git
 
