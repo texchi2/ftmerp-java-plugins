@@ -29,6 +29,8 @@ webpos/webpos
 
 # OpenWolf — valuable knowledge (DO sync)
  .wolf/memory.md        
+.wolf/*
+!.wolf/cerebrum.md
 # .wolf/cerebrum.md      ← kept in git
 # .wolf/config.json      ← kept in git
 
