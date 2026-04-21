@@ -29,16 +29,14 @@ webpos/webpos
 CLAUDE.md
 
 # OpenWolf — valuable knowledge (DO sync)
- .wolf/memory.md       
 # .wolf/cerebrum.md      ← kept in git
 # .wolf/config.json      ← kept in git
 
 # fix-ftm-garments.sh
 .hermes.md
-.playwright-mcp
+ .wolf/memory.md        
+# .wolf/cerebrum.md      ← kept in git
+# .wolf/config.json      ← kept in git
 
-# Root-level npm artifacts — not part of OFBiz build
-/package.json
-/package-lock.json
-/node_modules/
 .python-version
+
