@@ -262,6 +262,10 @@ ollama rm deepseek-coder 2>/dev/null || true
 
 ## 6. Development Environment Setup
 
+While OFBiz itself will function in either location, the path choice reflects the environment's purpose and adheres to system administration best practices for organization and security.
+- in system level: /opt/ofbiz
+- in user level: ~/devlopment/ofbiz
+
 ### 6.1 MacStudio — Ollama Server (One-time)
 
 ```bash
