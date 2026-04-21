@@ -35,6 +35,8 @@ CLAUDE.md
 # fix-ftm-garments.sh
 .hermes.md
  .wolf/memory.md        
+.wolf/*
+!.wolf/cerebrum.md
 # .wolf/cerebrum.md      ← kept in git
 # .wolf/config.json      ← kept in git
 
