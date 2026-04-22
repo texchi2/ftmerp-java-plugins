@@ -10,7 +10,7 @@ def MODULE = "GetAuthorizedUsers"
 def getFtmAuthorizedUsers() {
     def jdbcUrl  = "jdbc:postgresql://192.168.30.3:5432/ftm_enrollment"
     def jdbcUser = "enrolladmin"
-    def jdbcPass = System.getenv("FTM_ENROLLMENT_DB_PASS") ?: "ftmscep2026"
+    def jdbcPass = System.getProperty("ftm.enrolladmin.password") ?: System.getenv("FTM_ENROLLMENT_DB_PASS") ?: "MISSING_PASSWORD"
     def jdbcDriver = "org.postgresql.Driver"
 
     def whereClauses = ["1=1"]
