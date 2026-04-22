@@ -9,7 +9,7 @@ if (employeeId?.trim()) {
     def sql = Sql.newInstance(
         "jdbc:postgresql://192.168.30.3:5432/ftm_enrollment",
         "enrolladmin",
-        System.getenv("FTM_ENROLLMENT_DB_PASS") ?: "ftmscep2026",
+        System.getProperty("ftm.enrolladmin.password") ?: System.getenv("FTM_ENROLLMENT_DB_PASS") ?: "MISSING_PASSWORD",
         "org.postgresql.Driver"
     )
     try {
