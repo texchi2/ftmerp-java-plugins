@@ -26,17 +26,24 @@ webpos/webpos
 .wolf/hooks/_session.json
 .wolf/token-ledger.json
 .wolf/anatomy.md
-CLAUDE.md
 .wolf/memory.md
 .wolf/hooks/
 .wolf/config.json
 .wolf/OPENWOLF.md
+.wolf/buglog.json
+.wolf/cron-manifest.json
+.wolf/cron-state.json
+.wolf/daemon.log
+.wolf/designqc-report.json
+.wolf/identity.md
+.wolf/ofbiz-memory.md
+.wolf/reframe-frameworks.md
+.wolf/suggestions.json
 
 # cerebrum.md is NOT listed → it remains tracked
-# OpenWolf — valuable knowledge (DO sync)
 # .wolf/cerebrum.md      ← kept in git
-# .wolf/config.json      ← kept in git
 
-
+CLAUDE.md
 .python-version
-
+fix-ftm-garments.sh
+.hermes.md
