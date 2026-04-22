@@ -5,7 +5,6 @@
 
     <resource-loader name="main" type="component"/>
     <!-- Apache POI for Excel import -->
-    <classpath type="dir" location="lib"/>
 
     <!-- Entity model for authorized_users and audit log -->
     <entity-resource type="model" reader-name="main" loader="main"
