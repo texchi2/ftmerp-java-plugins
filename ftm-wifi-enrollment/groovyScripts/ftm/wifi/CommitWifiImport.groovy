@@ -5,7 +5,7 @@ import org.apache.ofbiz.base.util.UtilHttp
 
 @groovy.transform.Field String JDBC_URL    = "jdbc:postgresql://192.168.30.3:5432/ftm_enrollment"
 @groovy.transform.Field String JDBC_USER   = "enrolladmin"
-@groovy.transform.Field String JDBC_PASS   = System.getenv("FTM_ENROLLMENT_DB_PASS") ?: "ftmscep2026"
+@groovy.transform.Field String JDBC_PASS   = System.getProperty("ftm.enrolladmin.password") ?: System.getenv("FTM_ENROLLMENT_DB_PASS") ?: "MISSING_PASSWORD"
 @groovy.transform.Field String JDBC_DRIVER = "org.postgresql.Driver"
 
 @groovy.transform.Field
