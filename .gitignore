@@ -49,7 +49,15 @@ CLAUDE.md
 # cerebrum.md is NOT listed → it remains tracked
 # .wolf/cerebrum.md      ← kept in git
 # .wolf/config.json      ← kept in git
-
+.wolf/buglog.json
+        .wolf/cron-manifest.json
+        .wolf/cron-state.json
+        .wolf/daemon.log
+        .wolf/designqc-report.json
+        .wolf/identity.md
+        .wolf/ofbiz-memory.md
+        .wolf/reframe-frameworks.md
+        .wolf/suggestions.json
 .python-version
 
  fix-ftm-garments.sh
