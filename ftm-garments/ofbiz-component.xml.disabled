@@ -13,8 +13,9 @@
     <entity-resource type="data" reader-name="demo" loader="main" location="data/FtmGarmentsDemoData.xml"/>
 
     <entity-resource type="data" reader-name="ext" loader="main" location="data/FtmWorkflowData.xml"/>
+    <entity-resource type="data" reader-name="ext" loader="main" location="data/FtmBomData.xml"/>
 
-    <service-resource type="model" loader="main" location="servicedef/services.xml"/>
+  <service-resource type="model" loader="main" location="servicedef/services.xml"/>
     
     <webapp name="ftm-garments"
         title="FTM Garments Management"
