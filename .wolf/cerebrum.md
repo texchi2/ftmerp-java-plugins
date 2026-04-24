@@ -67,3 +67,138 @@ Script-level vars need @groovy.transform.Field to be accessible in methods.
 
 ### Deactivate ≠ Delete
 Deactivate = SET active=FALSE (reversible). Delete = permanent with JS confirm FTL.
+
+
+
+
+# FTM OFBiz cerebrum.md
+<!-- Branch: feature/ftm-garments | Tracked in git | Updated: 2026-04-22 -->
+
+## Project Identity
+
+- **Repo:** ftmerp-java-plugins + ftmerp-java-project (Apache OFBiz fork)
+- **Active branch:** feature/ftm-garments (all Phase 7-9 work)
+- **OFBiz version:** trunk (JDK 21, Gradle 8.8, Tomcat 10.1)
+- **DB:** PostgreSQL 16 on 192.168.30.3 — databases: ftmerp, ftm_enrollment, ftm_ofbiz
+- **Dev container:** Incus ofbiz-dev at 192.168.30.102
+- **Ollama:** MacStudio 192.168.192.79:11434 (llama3.3:70b, gemma4-ofbiz)
+
+## Active Plugins
+
+### ftm-wifi-enrollment
+- **Purpose:** HR/IT UI for managing WiFi EAP-TLS certificate enrollment
+- **DB:** ftm_enrollment (PostgreSQL), user: enrolladmin
+- **Delegator:** ftmEnrollment (separate from OFBiz default)
+- **Password injection:** start-ftm.sh reads gradle.properties.local → -PjvmArgs=-Dftm.enrolladmin.password=...
+- **Groovy pattern:** System.getProperty("ftm.enrolladmin.password") ?: System.getenv("FTM_ENROLLMENT_DB_PASS") ?: "MISSING_PASSWORD"
+- **Phase 7 complete:** CRUD, CSV export, Excel import (POI 5.3), activate/deactivate/delete
+
+### ftm-garments
+- **Purpose:** FTM garment manufacturing workflow (styles, colors, production)
+- **Status:** Scaffolded, active development in Phase 9+
+- **widget-resource:** removed from ofbiz-component.xml (OFBiz trunk schema change)
+
+## Critical OFBiz Knowledge
+
+### Build
+```bash
+# ALWAYS run after schema/entitymodel changes:
+./gradlew cleanAll   # deletes build/ entirely
+./gradlew build -x test
+./gradlew loadAll    # only if DB tables missing
+bash start-ftm.sh &  # starts OFBiz
+```
+
+### entityengine.xml Rules
+- **Source:** framework/entity/config/entityengine.xml (real passwords on disk)
+- **Git:** assume-unchanged — NEVER commit with real passwords
+- **Built copy:** build/resources/main/entityengine.xml — Gradle copies from source
+- **Schema:** use reader-name NOT helper-name; no write-data element (trunk XSD)
+- **FTM datasources:** localpostgres (ftm_ofbiz), localpostgresftmerp (ftmerp), ftmEnrollmentDataSource (ftm_enrollment)
+- **Delegator ordering:** default → localpostgresftmerp; ftmEnrollment → ftmEnrollmentDataSource
+
+### Password Management
+```
+Real passwords ONLY in:
+  entityengine.xml on disk (assume-unchanged)
+  gradle.properties.local (gitignored, chmod 600)
+  ~/.pgpass (chmod 600)
+
+NEVER in:
+  any committed file
+  any .md, .sh, .xml, .groovy in git
+  any env var printed to logs
+
+Current passwords (rotated 2026-04-22):
+  ftmuser → [in gradle.properties.local]
+  enrolladmin → [in gradle.properties.local]
+  ofbizadmin → [in gradle.properties.local]
+  (old passwords FTMIT@2026 ftmscep2026 FtmOfbiz2026! are INVALID)
+```
+
+### Common Failure Patterns + Fixes
+
+| Symptom | Root Cause | Fix |
+|---------|-----------|-----|
+| `delegator factory returned null` | build/resources/main/entityengine.xml stale schema | `./gradlew cleanAll && ./gradlew build -x test` |
+| `helper-name not allowed` in entityengine.xml | Old schema — use reader-name | Python regex replace, not sed (tabs in file) |
+| `password authentication failed enrolladmin` | Old hardcoded password in Groovy | Replace with System.getProperty("ftm.enrolladmin.password") |
+| `-D flag not reaching OFBiz JVM` | -D goes to Gradle JVM not OFBiz JVM | Use -PjvmArgs="-Dfoo=bar" in gradlew call |
+| `poi-ooxml duplicate in distTar` | lib/ dir + build.gradle both declare POI | Remove lib/ dir and classpath from ofbiz-component.xml |
+| `widget-resource invalid` in ofbiz-component.xml | OFBiz trunk removed widget-resource from XSD | Delete the widget-resource lines |
+| PostgreSQL 5432 only on 127.0.0.1 after reboot | Network timing — PostgreSQL starts before bridge | postgresql-listen-fix.service (systemd, sleeps 15s then restarts pg) |
+| `sed` fails on special chars (@, #, !) | sed treats them as delimiters in some contexts | Use python3 str.replace() instead |
+
+### Git Workflow
+```bash
+# Session start (ALWAYS first):
+ftm-sync   # = git fetch origin && git rebase origin/feature/ftm-garments
+
+# Push:
+git push --force-with-lease origin feature/ftm-garments --no-verify
+
+# Cherry-pick to ftm-wifi-enrollment branch:
+git checkout feature/ftm-wifi-enrollment
+git cherry-pick <hash>
+git push origin feature/ftm-wifi-enrollment --no-verify
+git checkout feature/ftm-garments
+```
+
+### start-ftm.sh
+- Location: /opt/ofbiz-framework/start-ftm.sh
+- Gitignored — must recreate after re-clone
+- Reads FTM_ENROLLADMIN_PASSWORD from gradle.properties.local
+- Passes via: ./gradlew ofbiz -PjvmArgs="-Dftm.enrolladmin.password=${ENROLL_PASS}"
+- Safety check: fails if entityengine.xml still has YOUR_* placeholders
+
+## Phase Status
+
+```
+Phase 7: COMPLETE — ftm-wifi-enrollment plugin fully working
+Phase 8: COMPLETE — entityengine.xml FTM datasources configured
+Phase 9A: COMPLETE — security hardening (BFG, password rotation, git rules)
+Phase 9B: IN PROGRESS — PostgreSQL migration (loadAll done, backup cron pending)
+Phase 9C: PLANNED — Claude Code + Ollama model switching
+Phase 9D: PLANNED — Hermes Agent memory + skill extraction
+Phase 10: PLANNED — Apache Camel + Superset + LangChain4j
+```
+
+## Multi-Instance Collaboration (Phase 9C)
+
+```
+tmm7 (primary-dev):    claude-sonnet-4-6 or ollama launch claude --model llama3.3:70b
+ofbiz-dev (build-test): cc-ofbiz alias → gemma4-ofbiz via SSH tunnel to MacStudio
+rpitex (staging):       same as ofbiz-dev
+
+Shared state via:
+  git (feature/ftm-garments) — source of truth
+  .claude-code-state.json — gitignored, per-machine, session handoff
+  cerebrum.md (this file) — tracked, accumulated OFBiz knowledge
+  CLAUDE.md — tracked, project conventions
+
+Model switch within session:
+  cc-sonnet → complex planning/debugging
+  cc-llama  → bulk coding (free, no API tokens)
+  Context preserved via: Claude Code compaction + CLAUDE.md + cerebrum.md
+```
+
