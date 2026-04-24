@@ -49,4 +49,5 @@ fix-ftm-garments.sh
 .hermes.md
 
 # state for this instance only (ofbiz-dev)
+
 .claude-code-state.json
