@@ -1,6 +1,10 @@
 .DS_Store
 bin/
 node_modules/
+.python-version
+.hermes.md
+.claude-code-state.json
+
 # Symlink duplicates created by OFBiz build
 assetmaint/assetmaint
 bi/bi
@@ -23,14 +27,15 @@ scrum/scrum
 webpos/webpos
 
 # OpenWolf — machine-specific state (do NOT sync)
-.wolf/hooks/_session.json
-.wolf/token-ledger.json
+# .wolf/cerebrum.md is NOT listed → it remains tracked (valuable knowledge)
 .wolf/anatomy.md
 .wolf/memory.md
-.wolf/hooks/
-.wolf/config.json
-.wolf/OPENWOLF.md
 .wolf/buglog.json
+.wolf/config.json
+.wolf/hooks/
+.wolf/hooks/_session.json
+.wolf/token-ledger.json
+.wolf/OPENWOLF.md
 .wolf/cron-manifest.json
 .wolf/cron-state.json
 .wolf/daemon.log
@@ -40,14 +45,5 @@ webpos/webpos
 .wolf/reframe-frameworks.md
 .wolf/suggestions.json
 
-# cerebrum.md is NOT listed → it remains tracked
-# .wolf/cerebrum.md      ← kept in git
-
 CLAUDE.md
-.python-version
 fix-ftm-garments.sh
-.hermes.md
-
-# state for this instance only (ofbiz-dev)
-
-.claude-code-state.json
