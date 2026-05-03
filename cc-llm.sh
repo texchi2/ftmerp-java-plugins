@@ -35,9 +35,7 @@ PROXY_PID="/tmp/ftm-proxy.pid"
 # ── tunnel helpers ────────────────────────────────────────────────────────────
 
 tunnel_alive() {
-    curl -s --connect-timeout 2 \
-        -H "Authorization: Bearer freecc" \
-        "http://localhost:${PROXY_PORT}/health" > /dev/null 2>&1
+    nc -z localhost "${PROXY_PORT}" 2>/dev/null
 }
 
 ensure_tunnel() {
@@ -115,6 +113,8 @@ cmd_model() {
 
 cmd_launch() {
     local model_ref="${1:-}"
+    shift || true
+    local -a extra=("$@")   # --resume <id>, --continue, etc.
 
     ensure_tunnel
 
@@ -131,11 +131,11 @@ cmd_launch() {
     if [[ -n "$model_ref" ]]; then
         ANTHROPIC_BASE_URL="http://localhost:${PROXY_PORT}" \
         ANTHROPIC_AUTH_TOKEN="freecc" \
-        claude --model "$model_ref"
+        claude --model "$model_ref" "${extra[@]+"${extra[@]}"}"
     else
         ANTHROPIC_BASE_URL="http://localhost:${PROXY_PORT}" \
         ANTHROPIC_AUTH_TOKEN="freecc" \
-        claude
+        claude "${extra[@]+"${extra[@]}"}"
     fi
 }
 
@@ -150,19 +150,30 @@ case "${1:-launch}" in
     model)    shift; cmd_model "$@" ;;
     --model)
         [[ -z "${2:-}" ]] && { echo "Usage: $0 --model <provider/model>"; exit 1; }
-        cmd_launch "$2"
+        local_model="$2"; shift 2
+        cmd_launch "$local_model" "$@"
         ;;
-    launch|"") cmd_launch "" ;;
+    launch)
+        shift
+        cmd_launch "" "$@"
+        ;;
+    "")       cmd_launch "" ;;
+    --*)
+        # --resume <id>, --continue, or any other claude flag — pass through
+        cmd_launch "" "$@"
+        ;;
     *)
-        echo "Usage: $0 [--model <provider/model>]"
+        echo "Usage: $0 [--model <provider/model>] [claude-args...]"
         echo "       $0 {start|stop|restart|status|log}"
         echo "       $0 model <haiku|sonnet|opus> <provider/model>"
         echo ""
         echo "Launch:"
-        echo "  $0                                      default (ollama/llama3.3:70b)"
+        echo "  $0                                      default (MODEL_SONNET on MacStudio)"
         echo "  $0 --model ollama/ofbiz-think:latest    OFBiz specialist"
         echo "  $0 --model lmstudio/gemma4-mlx          Apple Silicon MLX"
         echo "  $0 --model ollama/gemma4-ofbiz:latest   Gemma4 OFBiz fine-tune"
+        echo "  $0 --resume <session-id>                resume a session (default model)"
+        echo "  $0 --model lmstudio/gemma4-mlx --resume <id>  resume with specific model"
         echo ""
         echo "Gateway management (runs on MacStudio via SSH):"
         echo "  $0 start / stop / restart / status / log"
