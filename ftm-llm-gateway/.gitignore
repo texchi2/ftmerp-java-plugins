@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+dist/
+uv.lock
+
+# Proxy subdirectory (cloned separately via bin/setup.sh)
+proxy/
+
+# Model weights (too large for git)
+models/
+*.safetensors
+*.gguf
+*.bin
+*.pt
+
+# Local config with actual model paths / secrets
+config/local.env
+
+# Runtime
+*.log
+*.pid

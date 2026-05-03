@@ -178,27 +178,64 @@ Phase 7: COMPLETE — ftm-wifi-enrollment plugin fully working
 Phase 8: COMPLETE — entityengine.xml FTM datasources configured
 Phase 9A: COMPLETE — security hardening (BFG, password rotation, git rules)
 Phase 9B: IN PROGRESS — PostgreSQL migration (loadAll done, backup cron pending)
-Phase 9C: PLANNED — Claude Code + Ollama model switching
+Phase 9C: IN PROGRESS — Claude Code + Ollama model switching (Rev3 proxy deployed)
 Phase 9D: PLANNED — Hermes Agent memory + skill extraction
 Phase 10: PLANNED — Apache Camel + Superset + LangChain4j
 ```
 
-## Multi-Instance Collaboration (Phase 9C)
+## Multi-Instance Collaboration (Phase 9C Rev3)
+
+### Auth finding (2026-05-03)
+tmm7 uses Claude Desktop OAuth (CLAUDE_CODE_PROVIDER_MANAGED_BY_HOST=1).
+NO sk-ant-* API key exists. Claude Code-credentials in macOS Keychain = OAuth token.
+Proxy can route to LOCAL Ollama only. Cloud Anthropic requires Desktop OAuth directly.
+
+### Rev3 Architecture: dual-mode via free-claude-code proxy
+```
+CLOUD mode  (cc / cc-sonnet / cc-opus)
+  → no ANTHROPIC_BASE_URL override
+  → Claude Desktop OAuth → real Anthropic API
+  → use for: complex planning, architecture, git security tasks
+
+LOCAL mode  (cc-local / cc-fast)
+  → ANTHROPIC_BASE_URL=http://localhost:8082
+  → free-claude-code proxy (~/development/free-claude-code/)
+  → Ollama on MacStudio (localhost:11434)
+  → use for: bulk coding, repetitive tasks, OFBiz XML/Groovy
+  → /model picker: switch between Ollama backends MID-SESSION (no restart)
+```
+
+### Proxy files
+  ~/development/free-claude-code/          ← proxy source (git clone)
+  ~/.config/free-claude-code/.env          ← proxy config (model tier mapping)
+  ~/development/ofbiz-plugins/start-ftm-proxy.sh  ← start/stop/model management
+
+### Model tiers (current — update as you pull better models)
+  MODEL_HAIKU  = ollama/phi3:3.8b     → upgrade: ollama pull gemma3:12b
+  MODEL_SONNET = ollama/mistral:7b    → upgrade: ollama pull llama3.3:70b
+  MODEL_OPUS   = ollama/mistral:7b    → upgrade: same llama3.3:70b
+
+### Shell aliases (~/.zshrc)
+  cc           → cloud Anthropic (Desktop OAuth)
+  cc-sonnet    → cloud sonnet-4-6
+  cc-opus      → cloud opus-4-6
+  cc-local     → starts proxy + launches Claude Code in local/Ollama mode
+  cc-fast      → local proxy already running, haiku tier (phi3 / gemma3)
+  ftm-proxy    → proxy management (start/stop/restart/status/model)
+
+### What Rev3 solves vs Rev2
+  Rev3 BETTER: within local session, /model picker switches Ollama backends without restart
+  Rev3 SAME: cloud↔local still requires new session (env var is process-scoped)
+  Rev3 ADDS: proxy process to manage (ftm-proxy status / ftm-proxy restart)
+
+### Cross-machine (ofbiz-dev / rpitex)
+  Same pattern: tunnel Ollama (tunnel-ollama alias), then:
+  ANTHROPIC_BASE_URL=http://127.0.0.1:8082 ANTHROPIC_AUTH_TOKEN=freecc claude
+  Or run proxy directly on remote machine pointing OLLAMA_BASE_URL at tunnel.
 
 ```
-tmm7 (primary-dev):    claude-sonnet-4-6 or ollama launch claude --model llama3.3:70b
-ofbiz-dev (build-test): cc-ofbiz alias → gemma4-ofbiz via SSH tunnel to MacStudio
+tmm7 (primary-dev):     cc (cloud) or cc-local (proxy→Ollama)
+ofbiz-dev (build-test): cc-local via SSH tunnel to MacStudio Ollama
 rpitex (staging):       same as ofbiz-dev
-
-Shared state via:
-  git (feature/ftm-garments) — source of truth
-  .claude-code-state.json — gitignored, per-machine, session handoff
-  cerebrum.md (this file) — tracked, accumulated OFBiz knowledge
-  CLAUDE.md — tracked, project conventions
-
-Model switch within session:
-  cc-sonnet → complex planning/debugging
-  cc-llama  → bulk coding (free, no API tokens)
-  Context preserved via: Claude Code compaction + CLAUDE.md + cerebrum.md
 ```
 

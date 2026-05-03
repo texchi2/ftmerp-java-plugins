@@ -1,0 +1,31 @@
+[project]
+name = "ftm-llm-gateway"
+version = "1.0.0"
+description = "FTM LLM Gateway — Ollama + MLX-VLM server for Claude Code on Apple Silicon"
+requires-python = ">=3.11"
+
+# Core deps: free-claude-code proxy
+dependencies = [
+    "fastapi[standard]>=0.136.1",
+    "uvicorn>=0.46.0",
+    "httpx[socks]>=0.28.1",
+    "markdown-it-py>=3.0.0",
+    "pydantic>=2.13.3",
+    "python-dotenv>=1.2.2",
+    "tiktoken>=0.7.0",
+    "pydantic-settings>=2.14.0",
+    "openai>=2.32.0",
+    "loguru>=0.7.0",
+    "aiohttp>=3.13.4",
+]
+
+# Optional: MLX-VLM server (Apple Silicon only)
+[project.optional-dependencies]
+mlx = [
+    "mlx-vlm>=0.1.0",
+    "jinja2>=3.1.0",
+]
+
+[tool.uv]
+# Use stable Python 3.14 from Homebrew — avoid alpha 3.14.0a5 (segfaults on macOS)
+python-preference = "only-system"
