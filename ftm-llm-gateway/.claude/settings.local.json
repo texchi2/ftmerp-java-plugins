@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(uv --version)",
+      "Bash(uv sync*)",
+      "Bash(uv run*)",
+      "Bash(uv add*)",
+      "Bash(pip show*)",
+      "Bash(python3*)",
+      "Bash(curl*)",
+      "Bash(bash bin/start.sh)",
+      "Bash(bash bin/stop.sh)",
+      "Bash(bash bin/status.sh)",
+      "Bash(bash bin/setup.sh)",
+      "Bash(tail*)",
+      "Bash(cat*)",
+      "Bash(ls*)",
+      "Bash(pgrep*)",
+      "Bash(pkill*)",
+      "Bash(git*)",
+      "Bash(claude --version)"
+    ]
+  }
+}

@@ -3,11 +3,16 @@
 Anthropic Messages API server backed by Gemma 4 on Apple MLX (via mlx-vlm).
 
 Usage:
-    MODEL_PATH=./models/gemma-4-31b-bf16 uv run python server.py
+    MODEL_PATH=./models/gemma-4-31b-it-bf16 uv run python mlx_server.py
 
-Claude Code integration:
+Claude Code integration (direct):
     export ANTHROPIC_BASE_URL=http://localhost:8090
-    export ANTHROPIC_API_KEY=local
+    export ANTHROPIC_AUTH_TOKEN=local
+    claude
+
+Claude Code integration (via ftm-llm-gateway proxy):
+    ANTHROPIC_BASE_URL=http://localhost:8082 ANTHROPIC_AUTH_TOKEN=freecc claude
+    then use /model picker → lmstudio/gemma4-mlx
 """
 
 import json
@@ -20,15 +25,21 @@ import uvicorn
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse, StreamingResponse
 from mlx_vlm import load, stream_generate
-from mlx_vlm.prompt_utils import apply_chat_template
-from mlx_vlm.utils import load_config
+
+try:
+    from mlx_vlm.prompt_utils import apply_chat_template
+    from mlx_vlm.utils import load_config
+except ImportError:
+    apply_chat_template = None  # type: ignore[assignment]
+    load_config = None          # type: ignore[assignment]
+
 from pydantic import BaseModel, Field
 
 # ---------------------------------------------------------------------------
 # Config
 # ---------------------------------------------------------------------------
 
-MODEL_PATH = os.environ.get("MODEL_PATH", "./models/gemma-4-31b-bf16")
+MODEL_PATH = os.environ.get("MODEL_PATH", "./models/gemma-4-31b-it-bf16")
 HOST = os.environ.get("HOST", "127.0.0.1")
 PORT = int(os.environ.get("PORT", "8090"))
 MAX_TOKENS_DEFAULT = int(os.environ.get("MAX_TOKENS_DEFAULT", "2048"))
@@ -39,7 +50,7 @@ MAX_TOKENS_DEFAULT = int(os.environ.get("MAX_TOKENS_DEFAULT", "2048"))
 
 print(f"Loading model from {MODEL_PATH} …", flush=True)
 _model, _processor = load(MODEL_PATH)
-_config = load_config(MODEL_PATH)
+_config = load_config(MODEL_PATH) if load_config is not None else {}
 print("Model ready.", flush=True)
 
 # ---------------------------------------------------------------------------
@@ -60,18 +71,29 @@ class Message(BaseModel):
 class MessagesRequest(BaseModel):
     model: str = "gemma4"
     messages: list[Message]
-    system: str | None = None
+    # Anthropic API allows system as string OR list of content blocks
+    system: str | list[ContentBlock] | None = None
     max_tokens: int = Field(default=MAX_TOKENS_DEFAULT)
     temperature: float = 0.7
     top_p: float = 0.9
     stream: bool = False
+    # Claude Code sends tool definitions; accepted but ignored by MLX server
+    tools: list | None = None
+    tool_choice: dict | None = None
+
+    def system_text(self) -> str | None:
+        if self.system is None:
+            return None
+        if isinstance(self.system, str):
+            return self.system
+        return " ".join(b.text for b in self.system if b.type == "text") or None
 
 
 # ---------------------------------------------------------------------------
 # Prompt construction
 # ---------------------------------------------------------------------------
 
-# Gemma 4 chat template (used when the tokenizer has no chat_template field).
+# Gemma 4 chat template (fallback when tokenizer has no chat_template field).
 _GEMMA4_TMPL = (
     "{% for message in messages %}"
     "{% if message['role'] == 'system' %}"
@@ -87,8 +109,9 @@ _GEMMA4_TMPL = (
 def _build_prompt(req: MessagesRequest) -> str:
     """Convert Anthropic messages to a Gemma4 chat prompt string."""
     hf_msgs: list[dict] = []
-    if req.system:
-        hf_msgs.append({"role": "system", "content": req.system})
+    sys_text = req.system_text()
+    if sys_text:
+        hf_msgs.append({"role": "system", "content": sys_text})
     for msg in req.messages:
         text = (
             msg.content
@@ -97,24 +120,25 @@ def _build_prompt(req: MessagesRequest) -> str:
         )
         hf_msgs.append({"role": msg.role, "content": text})
 
-    # Try the processor's built-in chat template first.
+    # 1. Try processor's built-in chat template.
     tokenizer = getattr(_processor, "tokenizer", _processor)
     if getattr(tokenizer, "chat_template", None):
         return tokenizer.apply_chat_template(
             hf_msgs, tokenize=False, add_generation_prompt=True
         )
 
-    # Fall back to mlx_vlm's apply_chat_template (handles gemma4 internally).
-    try:
-        prompt = apply_chat_template(
-            _processor, _config, hf_msgs, add_generation_prompt=True
-        )
-        if isinstance(prompt, str):
-            return prompt
-    except Exception:
-        pass
+    # 2. Fall back to mlx_vlm's apply_chat_template.
+    if apply_chat_template is not None:
+        try:
+            prompt = apply_chat_template(
+                _processor, _config, hf_msgs, add_generation_prompt=True
+            )
+            if isinstance(prompt, str):
+                return prompt
+        except Exception:
+            pass
 
-    # Last resort: manual Gemma 4 Jinja2 template.
+    # 3. Last resort: manual Gemma 4 Jinja2 template.
     from jinja2 import Environment
     env = Environment()
     tmpl = env.from_string(_GEMMA4_TMPL)
@@ -212,7 +236,7 @@ async def _sse_stream(
 # FastAPI app
 # ---------------------------------------------------------------------------
 
-app = FastAPI(title="MLX Gemma4 – Anthropic API", version="0.1.0")
+app = FastAPI(title="MLX Gemma4 – Anthropic API", version="0.2.0")
 
 
 @app.get("/v1/models")
