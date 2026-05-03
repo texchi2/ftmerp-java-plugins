@@ -19,7 +19,7 @@ import json
 import os
 import time
 import uuid
-from typing import AsyncIterator
+from typing import Any, AsyncIterator
 
 import uvicorn
 from fastapi import FastAPI, HTTPException
@@ -33,7 +33,7 @@ except ImportError:
     apply_chat_template = None  # type: ignore[assignment]
     load_config = None          # type: ignore[assignment]
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 # ---------------------------------------------------------------------------
 # Config
@@ -59,25 +59,64 @@ print("Model ready.", flush=True)
 
 
 class ContentBlock(BaseModel):
+    """Permissive content block — accepts any Anthropic block type.
+
+    Claude Code sends text, tool_use, tool_result, thinking, image blocks.
+    We only use 'text' for generation; all other types are accepted but
+    their text is extracted best-effort (empty string if no text field).
+    """
+    model_config = ConfigDict(extra="allow")
+
     type: str = "text"
-    text: str
+    text: str | None = None      # present on text / thinking blocks
+    thinking: str | None = None  # present on thinking blocks
+
+    def to_text(self) -> str:
+        """Extract plain text from any block type."""
+        if self.text:
+            return self.text
+        if self.thinking:
+            return f"<thinking>{self.thinking}</thinking>"
+        # tool_use / tool_result / image — skip content, just note the type
+        return ""
 
 
 class Message(BaseModel):
+    """Anthropic message — content may be a string or a list of any blocks."""
+    model_config = ConfigDict(extra="allow")
+
     role: str  # "user" | "assistant"
-    content: str | list[ContentBlock]
+    content: str | list[ContentBlock] | list[Any]
+
+    def to_text(self) -> str:
+        if isinstance(self.content, str):
+            return self.content
+        parts: list[str] = []
+        for block in self.content:
+            if isinstance(block, ContentBlock):
+                parts.append(block.to_text())
+            elif isinstance(block, dict):
+                # Fallback for blocks Pydantic couldn't coerce
+                parts.append(block.get("text") or block.get("thinking") or "")
+        return " ".join(p for p in parts if p)
 
 
 class MessagesRequest(BaseModel):
+    """Anthropic Messages API — accept all fields Claude Code sends."""
+    model_config = ConfigDict(extra="ignore")  # silently drop unknown fields
+
     model: str = "gemma4"
     messages: list[Message]
-    # Anthropic API allows system as string OR list of content blocks
-    system: str | list[ContentBlock] | None = None
+    # system: string or list of content blocks
+    system: str | list[ContentBlock] | list[Any] | None = None
     max_tokens: int = Field(default=MAX_TOKENS_DEFAULT)
     temperature: float = 0.7
     top_p: float = 0.9
+    top_k: int | None = None          # accepted, not forwarded (mlx_vlm doesn't expose it)
     stream: bool = False
-    # Claude Code sends tool definitions; accepted but ignored by MLX server
+    stop_sequences: list[str] | None = None
+    metadata: dict | None = None
+    # Tool definitions — accepted but ignored (MLX model doesn't call tools)
     tools: list | None = None
     tool_choice: dict | None = None
 
@@ -86,7 +125,13 @@ class MessagesRequest(BaseModel):
             return None
         if isinstance(self.system, str):
             return self.system
-        return " ".join(b.text for b in self.system if b.type == "text") or None
+        parts: list[str] = []
+        for b in self.system:
+            if isinstance(b, ContentBlock):
+                parts.append(b.to_text())
+            elif isinstance(b, dict):
+                parts.append(b.get("text") or "")
+        return " ".join(p for p in parts if p) or None
 
 
 # ---------------------------------------------------------------------------
@@ -113,12 +158,7 @@ def _build_prompt(req: MessagesRequest) -> str:
     if sys_text:
         hf_msgs.append({"role": "system", "content": sys_text})
     for msg in req.messages:
-        text = (
-            msg.content
-            if isinstance(msg.content, str)
-            else " ".join(b.text for b in msg.content)
-        )
-        hf_msgs.append({"role": msg.role, "content": text})
+        hf_msgs.append({"role": msg.role, "content": msg.to_text()})
 
     # 1. Try processor's built-in chat template.
     tokenizer = getattr(_processor, "tokenizer", _processor)
