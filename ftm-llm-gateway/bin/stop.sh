@@ -12,5 +12,6 @@ stop_pid() {
     fi
 }
 
-stop_pid "Proxy"      /tmp/ftm-proxy.pid
-stop_pid "MLX server" /tmp/ftm-mlx.pid
+stop_pid "Proxy"           /tmp/ftm-proxy.pid
+stop_pid "MLX server"      /tmp/ftm-mlx.pid
+stop_pid "gpt-oss-120b"    /tmp/ftm-gptoss.pid

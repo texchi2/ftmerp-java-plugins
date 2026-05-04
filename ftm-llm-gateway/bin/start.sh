@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
-# start.sh — Start MLX-VLM server (8090) + free-claude-code proxy (8082) on MacStudio
+# start.sh — Start MLX servers + free-claude-code proxy on MacStudio
+#   port 8090 : mlx_server.py       — Gemma4 31B (mlx_vlm)
+#   port 8091 : mlx_server_gptoss.py — gpt-oss 120B (mlx_lm)  [optional, ~61 GB]
+#   port 8082 : free-claude-code proxy
 set -euo pipefail
 
 GATEWAY_DIR="$(cd "$(dirname "$0")/.." && pwd)"
@@ -59,8 +62,35 @@ else
     fi
 fi
 
+# ── 3. gpt-oss-120b MLX server (optional) ────────────────────────────────────
+GPT_PID="/tmp/ftm-gptoss.pid"
+GPT_LOG="$LOG_DIR/ftm-gptoss.log"
+GPT_MODEL="${GPT_MODEL:-$HOME/mlx_gemma4/models/gpt-oss-120b-bf16}"
+
+gptoss_running() { [[ -f "$GPT_PID" ]] && kill -0 "$(cat "$GPT_PID")" 2>/dev/null; }
+
+if gptoss_running; then
+    echo "gpt-oss-120b server already running (PID $(cat "$GPT_PID"))"
+elif [[ -d "$GPT_MODEL" ]]; then
+    echo "Starting gpt-oss-120b server (port 8091) ..."
+    cd "$GATEWAY_DIR"
+    PORT=8091 MODEL_PATH="$GPT_MODEL" \
+        nohup uv run --extra mlx python mlx_server_gptoss.py \
+        >> "$GPT_LOG" 2>&1 &
+    echo $! > "$GPT_PID"
+    sleep 3
+    if gptoss_running; then
+        echo "  gpt-oss-120b started (PID $(cat "$GPT_PID"))"
+    else
+        echo "  WARNING: gpt-oss-120b may have failed — check $GPT_LOG"
+    fi
+else
+    echo "  gpt-oss-120b model not found at $GPT_MODEL — skipping port 8091"
+fi
+
 echo ""
 echo "ftm-llm-gateway running:"
-echo "  Proxy  : http://localhost:8082  (SSH-tunnel accessible)"
-echo "  MLX    : http://localhost:8090  (MacStudio local only)"
-echo "  Ollama : http://localhost:11434 (MacStudio local only)"
+echo "  Proxy     : http://localhost:8082  (SSH-tunnel accessible)"
+echo "  Gemma4    : http://localhost:8090  (MacStudio local only)"
+echo "  gpt-oss   : http://localhost:8091  (MacStudio local only)"
+echo "  Ollama    : http://localhost:11434 (MacStudio local only)"
