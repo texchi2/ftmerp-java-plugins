@@ -10,6 +10,12 @@ This project uses OpenWolf for context management. Read and follow .wolf/OPENWOL
 ## Model
 llama3.3-agent:latest via http://192.168.30.3:11434
 
+## Sister repo
+`ftmerp-java-project` carries the FTM ERP framework fork. See its
+`/CLAUDE.md` for the full Karpathy-style behavioral rules (think-before,
+simplicity, surgical edits, TDD policy) — those apply to plugin work too.
+The 6 hard rules below remain plugin-specific operational rules.
+
 ## Rules
 1. /doc-first: fetch OFBiz XSD before writing XML
 2. External DB entities: no-auto-stamp="true"
@@ -74,7 +80,7 @@ rpitex (Pi5)       → staging      → gemma4-ofbiz:latest (via SSH tunnel)
 # Cloud Claude
 alias cc='claude'
 alias cc-sonnet='claude --model claude-sonnet-4-6'
-alias cc-opus='claude --model claude-opus-4-6'
+alias cc-opus='claude --model claude-opus-4-7'
 
 # Local Ollama (MacStudio)
 alias cc-llama='ollama launch claude --model llama3.3:70b'
