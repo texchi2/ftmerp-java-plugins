@@ -120,17 +120,119 @@
         </field>
     </form>
 
-    <!-- ==================== ENROLLED DEVICES LIST (READ-ONLY) ==================== -->
+    <!-- ==================== ENROLLED DEVICES LIST (per-user, in EditAuthorizedUser) ==================== -->
     <form name="EnrolledDevicesList" type="list"
         list-name="enrolledDevices"
-        default-table-style="basic-table">
-        <actions>
-            <!-- Read-only from PostgreSQL via raw query in screen action -->
-        </actions>
+        default-table-style="basic-table hover-bar">
         <field name="deviceLabel"  title="Device Label">  <display/></field>
-        <field name="serialNumber" title="Serial Number">  <display/></field>
+        <field name="serialNumber" title="Serial #">       <display/></field>
+        <field name="cn"           title="Cert CN">        <display/></field>
         <field name="status"       title="Status">         <display/></field>
-        <field name="certSerial"   title="Cert Serial">    <display/></field>
+        <field name="requestTime"  title="Requested">      <display/></field>
+        <field name="enrolledAt"   title="Enrolled">       <display/></field>
+        <field name="certExpiry"   title="Cert Expires">   <display/></field>
+        <field name="radiusActive" title="RADIUS">         <display/></field>
+        <field name="revokeAction" title=" ">
+            <hyperlink description="Revoke" target="RevokeDevice"
+                confirmation="Revoke this device? RADIUS access will be disabled.">
+                <parameter param-name="deviceId" from-field="id"/>
+            </hyperlink>
+        </field>
+        <field name="deleteAction" title=" ">
+            <hyperlink description="Delete" target="DeleteDevice"
+                confirmation="Permanently delete this enrollment record?">
+                <parameter param-name="deviceId" from-field="id"/>
+            </hyperlink>
+        </field>
+    </form>
+
+    <!-- ==================== DEVICE ROSTER LIST (all devices, read-only) ==================== -->
+    <form name="DeviceRosterList" type="list"
+        list-name="deviceList"
+        odd-row-style="alternate-row"
+        default-table-style="basic-table hover-bar">
+        <field name="fullName"     title="Staff Name">     <display/></field>
+        <field name="username"     title="Username">       <display/></field>
+        <field name="vlanTier"     title="WiFi Tier">      <display/></field>
+        <field name="quotaDisplay" title="Devices (used/quota)"> <display/></field>
+        <field name="deviceLabel"  title="Device Label">  <display/></field>
+        <field name="serialNumber" title="Serial #">       <display/></field>
+        <field name="status"       title="Status">         <display/></field>
+        <field name="requestTime"  title="Requested">      <display/></field>
+        <field name="certExpiry"   title="Cert Expires">   <display/></field>
+        <field name="radiusActive" title="RADIUS">         <display/></field>
+    </form>
+
+    <!-- ==================== PENDING DEVICES LIST (admin approval queue) ==================== -->
+    <form name="PendingDevicesList" type="list"
+        list-name="pendingDevices"
+        odd-row-style="alternate-row"
+        default-table-style="basic-table hover-bar">
+        <field name="requestTime"  title="Requested">      <display/></field>
+        <field name="fullName"     title="Staff Name">     <display/></field>
+        <field name="username"     title="Username">       <display/></field>
+        <field name="deviceLabel"  title="Device Label">  <display/></field>
+        <field name="serialNumber" title="Serial #">       <display/></field>
+        <field name="cn"           title="Cert CN">        <display/></field>
+        <field name="requestIp"    title="From IP">        <display/></field>
+        <field name="approveAction" title=" ">
+            <hyperlink description="Approve" target="ApproveDevice">
+                <parameter param-name="deviceId" from-field="id"/>
+            </hyperlink>
+        </field>
+        <field name="rejectAction" title=" ">
+            <hyperlink description="Reject" target="RevokeDevice"
+                confirmation="Reject and revoke this enrollment request?">
+                <parameter param-name="deviceId" from-field="id"/>
+            </hyperlink>
+        </field>
+    </form>
+
+    <!-- ==================== ALL DEVICES ADMIN LIST (full management) ==================== -->
+    <form name="AllDevicesAdminList" type="list"
+        list-name="allDevices"
+        odd-row-style="alternate-row"
+        default-table-style="basic-table hover-bar">
+        <field name="requestTime"  title="Requested">      <display/></field>
+        <field name="fullName"     title="Staff Name">     <display/></field>
+        <field name="username"     title="Username">       <display/></field>
+        <field name="vlanTier"     title="WiFi Tier">      <display/></field>
+        <field name="deviceLabel"  title="Device Label">  <display/></field>
+        <field name="serialNumber" title="Serial #">       <display/></field>
+        <field name="status"       title="Status">         <display/></field>
+        <field name="enrolledAt"   title="Enrolled">       <display/></field>
+        <field name="certExpiry"   title="Cert Expires">   <display/></field>
+        <field name="radiusActive" title="RADIUS">         <display/></field>
+        <field name="approvedBy"   title="Approved By">    <display/></field>
+        <field name="revokeAction" title=" ">
+            <hyperlink description="Revoke" target="RevokeDevice"
+                confirmation="Revoke device? RADIUS access will be disabled.">
+                <parameter param-name="deviceId" from-field="id"/>
+            </hyperlink>
+        </field>
+        <field name="deleteAction" title=" ">
+            <hyperlink description="Delete" target="DeleteDevice"
+                confirmation="Permanently delete this enrollment record?">
+                <parameter param-name="deviceId" from-field="id"/>
+            </hyperlink>
+        </field>
+    </form>
+
+    <!-- ==================== STATUS FILTER FORM (for Device Admin / Roster) ==================== -->
+    <form name="DeviceStatusFilter" type="single"
+        target="DeviceAdmin" default-map-name="parameters">
+        <field name="statusFilter" title="Filter by Status">
+            <drop-down allow-empty="false">
+                <option key="all"      description="-- All --"/>
+                <option key="pending"  description="Pending"/>
+                <option key="approved" description="Approved"/>
+                <option key="enrolled" description="Enrolled"/>
+                <option key="revoked"  description="Revoked"/>
+            </drop-down>
+        </field>
+        <field name="filterButton" title=" ">
+            <submit button-type="button"/>
+        </field>
     </form>
 
     <!-- ==================== EXCEL UPLOAD FORM ==================== -->

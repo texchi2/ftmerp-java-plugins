@@ -62,6 +62,26 @@
         <response name="success" type="view" value="ImportSummary"/>
         <response name="error" type="view" value="ImportPreview"/>
     </request-map>
+    <request-map uri="DeviceRoster"><security https="false" auth="true"/><response name="success" type="view" value="DeviceRoster"/></request-map>
+    <request-map uri="DeviceAdmin"><security https="false" auth="true"/><response name="success" type="view" value="DeviceAdmin"/></request-map>
+    <request-map uri="ApproveDevice">
+        <security https="false" auth="true"/>
+        <event type="service" invoke="approveFtmDevice"/>
+        <response name="success" type="request-redirect" value="DeviceAdmin"/>
+        <response name="error"   type="request-redirect" value="DeviceAdmin"/>
+    </request-map>
+    <request-map uri="RevokeDevice">
+        <security https="false" auth="true"/>
+        <event type="service" invoke="revokeFtmDevice"/>
+        <response name="success" type="request-redirect" value="DeviceAdmin"/>
+        <response name="error"   type="request-redirect" value="DeviceAdmin"/>
+    </request-map>
+    <request-map uri="DeleteDevice">
+        <security https="false" auth="true"/>
+        <event type="service" invoke="deleteFtmDevice"/>
+        <response name="success" type="request-redirect" value="DeviceAdmin"/>
+        <response name="error"   type="request-redirect" value="DeviceAdmin"/>
+    </request-map>
 
     <!-- View Mappings -->
     <view-map name="main" type="screen" page="component://ftm-wifi-enrollment/widget/FtmWifiScreens.xml#FindAuthorizedUsers"/>
@@ -71,5 +91,7 @@
     <view-map name="ImportWifiUsers" type="screen" page="component://ftm-wifi-enrollment/widget/FtmWifiScreens.xml#ImportWifiUsers"/>
     <view-map name="ImportPreview" type="screen" page="component://ftm-wifi-enrollment/widget/FtmWifiScreens.xml#ImportPreview"/>
     <view-map name="ImportSummary" type="screen" page="component://ftm-wifi-enrollment/widget/FtmWifiScreens.xml#ImportSummary"/>
+    <view-map name="DeviceRoster"  type="screen" page="component://ftm-wifi-enrollment/widget/FtmWifiScreens.xml#DeviceRoster"/>
+    <view-map name="DeviceAdmin"   type="screen" page="component://ftm-wifi-enrollment/widget/FtmWifiScreens.xml#DeviceAdmin"/>
 
 </site-conf>

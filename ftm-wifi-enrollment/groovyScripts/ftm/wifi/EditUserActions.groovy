@@ -1,9 +1,10 @@
 // EditUserActions.groovy — load user for edit screen, or blank for add
-// No service call needed — direct JDBC, handles missing employeeId gracefully
 import groovy.sql.Sql
 
 def employeeId = parameters.employeeId
-context.user = null
+context.user           = null
+context.enrolledDevices = []
+context.quotaDisplay   = "0 / ?"
 
 if (employeeId?.trim()) {
     def sql = Sql.newInstance(
@@ -27,6 +28,33 @@ if (employeeId?.trim()) {
                 notes:          row.notes,
                 active:         row.active
             ]
+        }
+
+        if (context.user) {
+            def devices = []
+            sql.eachRow("""
+                SELECT ed.id, ed.device_label, ed.serial_number, ed.cn, ed.status,
+                       ed.request_time, ed.enrolled_at, ed.cert_expiry, ed.radius_active
+                FROM enrolled_devices ed
+                JOIN authorized_users au ON au.id = ed.user_id
+                WHERE au.employee_id = ?
+                ORDER BY ed.request_time DESC
+            """, [employeeId.trim()]) { row ->
+                devices << [
+                    id:           row.id,
+                    deviceLabel:  row.device_label ?: "(no label)",
+                    serialNumber: row.serial_number ?: "",
+                    cn:           row.cn ?: "",
+                    status:       row.status,
+                    requestTime:  row.request_time?.toString()?.take(16) ?: "",
+                    enrolledAt:   row.enrolled_at?.toString()?.take(16) ?: "",
+                    certExpiry:   row.cert_expiry?.toString()?.take(10) ?: "",
+                    radiusActive: row.radius_active ? "Yes" : "No"
+                ]
+            }
+            context.enrolledDevices = devices
+            def activeCount = devices.count { it.status in ['enrolled', 'approved'] }
+            context.quotaDisplay = "${activeCount} / ${context.user.deviceQuota}"
         }
     } finally {
         sql.close()

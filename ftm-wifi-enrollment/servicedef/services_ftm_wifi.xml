@@ -104,4 +104,39 @@
         <attribute name="employeeId" type="String" mode="IN" optional="false"/>
         <attribute name="message"    type="String" mode="OUT" optional="true"/>
     </service>
+
+    <!-- ==================== ENROLLED DEVICE SERVICES ==================== -->
+
+    <service name="getAllFtmEnrolledDevices" engine="groovy"
+        location="component://ftm-wifi-enrollment/groovyScripts/ftm/wifi/GetAllEnrolledDevices.groovy"
+        invoke="getAllFtmEnrolledDevices" auth="false">
+        <description>Get all enrolled devices with user info and quota usage</description>
+        <attribute name="statusFilter" type="String"  mode="IN"  optional="true"/>
+        <attribute name="deviceList"   type="List"    mode="OUT" optional="false"/>
+        <attribute name="deviceCount"  type="Integer" mode="OUT" optional="false"/>
+    </service>
+
+    <service name="approveFtmDevice" engine="groovy"
+        location="component://ftm-wifi-enrollment/groovyScripts/ftm/wifi/ApproveDevice.groovy"
+        invoke="approveFtmDevice" auth="true">
+        <description>Approve a pending device enrollment</description>
+        <attribute name="deviceId" type="Long"   mode="IN"  optional="false"/>
+        <attribute name="message"  type="String" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="revokeFtmDevice" engine="groovy"
+        location="component://ftm-wifi-enrollment/groovyScripts/ftm/wifi/RevokeDevice.groovy"
+        invoke="revokeFtmDevice" auth="true">
+        <description>Revoke a device enrollment (status=revoked, radius_active=false)</description>
+        <attribute name="deviceId" type="Long"   mode="IN"  optional="false"/>
+        <attribute name="message"  type="String" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="deleteFtmDevice" engine="groovy"
+        location="component://ftm-wifi-enrollment/groovyScripts/ftm/wifi/DeleteDevice.groovy"
+        invoke="deleteFtmDevice" auth="true">
+        <description>Permanently delete a device enrollment record</description>
+        <attribute name="deviceId" type="Long"   mode="IN"  optional="false"/>
+        <attribute name="message"  type="String" mode="OUT" optional="true"/>
+    </service>
 </services>

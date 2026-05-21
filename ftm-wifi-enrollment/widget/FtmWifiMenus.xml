@@ -16,6 +16,12 @@
         <menu-item name="UploadWifiUsers" title="Import Excel">
             <link target="UploadWifiUsers"/>
         </menu-item>
+        <menu-item name="DeviceRoster" title="Device Roster">
+            <link target="DeviceRoster"/>
+        </menu-item>
+        <menu-item name="DeviceAdmin" title="Device Admin">
+            <link target="DeviceAdmin"/>
+        </menu-item>
 
     </menu>
 
