@@ -1,6 +1,6 @@
 // GetAllEnrolledDevices.groovy
-// Returns all enrolled_devices with authorized_users info + quota usage.
-// Logic at script top-level so OFBiz binding vars (result, parameters) are accessible.
+// OFBiz service (no invoke= — script.run() used). Returns result map directly.
+// result binding is NOT pre-populated; use explicit return [responseMessage:...].
 
 import groovy.sql.Sql
 
@@ -12,6 +12,7 @@ def jdbcDriver = "org.postgresql.Driver"
 def statusFilter = parameters.statusFilter?.trim() ?: ""
 
 def sql = Sql.newInstance(jdbcUrl, jdbcUser, jdbcPass, jdbcDriver)
+def devices = []
 try {
     def query = """
         SELECT ed.id, ed.device_label, ed.serial_number, ed.cn, ed.status,
@@ -31,7 +32,6 @@ try {
     }
     query += " ORDER BY ed.request_time DESC"
 
-    def devices = []
     sql.eachRow(query, params) { row ->
         devices << [
             id:             row.id,
@@ -51,8 +51,8 @@ try {
             quotaDisplay:   "${row.active_device_count} / ${row.device_quota}"
         ]
     }
-    result.deviceList  = devices
-    result.deviceCount = devices.size()
 } finally {
     sql.close()
 }
+
+return [responseMessage: "success", deviceList: devices, deviceCount: devices.size()]
