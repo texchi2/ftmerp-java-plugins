@@ -133,14 +133,12 @@
         <field name="certExpiry"   title="Cert Expires">   <display/></field>
         <field name="radiusActive" title="RADIUS">         <display/></field>
         <field name="revokeAction" title=" ">
-            <hyperlink description="Revoke" target="RevokeDevice"
-                confirmation="Revoke this device? RADIUS access will be disabled.">
+            <hyperlink description="Revoke" target="RevokeDevice">
                 <parameter param-name="deviceId" from-field="id"/>
             </hyperlink>
         </field>
         <field name="deleteAction" title=" ">
-            <hyperlink description="Delete" target="DeleteDevice"
-                confirmation="Permanently delete this enrollment record?">
+            <hyperlink description="Delete" target="DeleteDevice">
                 <parameter param-name="deviceId" from-field="id"/>
             </hyperlink>
         </field>
@@ -181,8 +179,7 @@
             </hyperlink>
         </field>
         <field name="rejectAction" title=" ">
-            <hyperlink description="Reject" target="RevokeDevice"
-                confirmation="Reject and revoke this enrollment request?">
+            <hyperlink description="Reject" target="RevokeDevice">
                 <parameter param-name="deviceId" from-field="id"/>
             </hyperlink>
         </field>
@@ -205,14 +202,12 @@
         <field name="radiusActive" title="RADIUS">         <display/></field>
         <field name="approvedBy"   title="Approved By">    <display/></field>
         <field name="revokeAction" title=" ">
-            <hyperlink description="Revoke" target="RevokeDevice"
-                confirmation="Revoke device? RADIUS access will be disabled.">
+            <hyperlink description="Revoke" target="RevokeDevice">
                 <parameter param-name="deviceId" from-field="id"/>
             </hyperlink>
         </field>
         <field name="deleteAction" title=" ">
-            <hyperlink description="Delete" target="DeleteDevice"
-                confirmation="Permanently delete this enrollment record?">
+            <hyperlink description="Delete" target="DeleteDevice">
                 <parameter param-name="deviceId" from-field="id"/>
             </hyperlink>
         </field>

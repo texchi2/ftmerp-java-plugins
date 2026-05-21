@@ -85,11 +85,7 @@
     <screen name="DeviceRoster">
         <section>
             <actions>
-                <service service-name="getAllFtmEnrolledDevices" result-map="serviceResult">
-                    <field-map field-name="statusFilter" from-field="parameters.statusFilter"/>
-                </service>
-                <set field="deviceList"  from-field="serviceResult.deviceList"/>
-                <set field="deviceCount" from-field="serviceResult.deviceCount"/>
+                <script location="component://ftm-wifi-enrollment/groovyScripts/ftm/wifi/DeviceRosterActions.groovy"/>
             </actions>
             <widgets>
                 <decorator-screen name="main-decorator" location="${parameters.mainDecoratorLocation}">

@@ -30,6 +30,8 @@
 - Never add PARAMETER think to Modelfile — think is an API field not Modelfile param
 - Always .toString() on ALL JDBC setString() parameters
 - Always declare variables before try block if used after finally
+- [2026-05-21] NEVER use `result.X = Y` in OFBiz Groovy services — `result` is NOT pre-populated in the binding. GroovyEngine only puts dispatcher/delegator/parameters in gContext. Script-body services (no invoke=): use `return [responseMessage:"success", outKey: value]`. Method-invoke services (invoke=method): return the map from the method. OFBiz uses the script/method return value directly as service result.
+- [2026-05-21] FTM_ENROLLMENT_DB_PASS env var must be set for ofbiz-dev JVM — add to /etc/environment in container AND start OFBiz with `env FTM_ENROLLMENT_DB_PASS=... ./gradlew ofbiz`
 
 ## Do-Not-Repeat (File Download Pattern)
 [2026-4-5]
@@ -136,7 +138,18 @@ Current passwords (rotated 2026-04-22):
   (old passwords FTMIT@2026 ftmscep2026 FtmOfbiz2026! are INVALID)
 ```
 
-### Common Failure Patterns + Fixes
+### OFBiz User Management (Derby embedded DB)
+- Create user: POST `/webtools/control/createUserLogin` with userLoginId + currentPassword + currentPasswordVerify + requirePasswordChange=N
+- Assign security group: POST `/webtools/control/userLogin_addUserLoginToSecurityGroup` — params: userLoginId, **groupId** (NOT securityGroupId), fromDate=YYYY-MM-DD HH:MM:SS.000
+- "You cannot login to this application" = user exists but has NO security group — add FULLADMIN for IT admins
+- "User not found" = user doesn't exist in OFBiz's own store (Derby) — create it first; Flask users are separate
+- Plan: Derby → PostgreSQL migration pending (ftm_ofbiz / ftmerp databases on 192.168.30.3 currently empty)
+
+## Do-Not-Repeat (OFBiz Proxy/Security)
+- [2026-05-21] When proxying OFBiz behind nginx (or any reverse proxy), ALWAYS add the proxy domain to `host-headers-allowed` in `framework/security/config/security.properties`. OFBiz rejects all requests from unrecognized Host headers with RequestHandlerException. Use python3 str.replace() to edit (not sed — special chars in value).
+- [2026-05-21] After editing security.properties, OFBiz MUST be restarted — it reads this file at startup only.
+
+## Common Failure Patterns + Fixes
 
 | Symptom | Root Cause | Fix |
 |---------|-----------|-----|
