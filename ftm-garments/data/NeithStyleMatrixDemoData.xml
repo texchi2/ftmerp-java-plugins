@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Project NEITH — Phase 1: Style / Colour / Size variant matrix (MVP demo data)
+  Built on NATIVE OFBiz product model (virtual + variants + ProductFeature),
+  linked to the existing ftm-garments FtmStyleNumber entity.
+
+  Load (from ofbiz-framework root): run gradlew ofbiz with the load-data flag, e.g.
+    gradlew ofbiz load-data file=plugins/ftm-garments/data/NeithStyleMatrixDemoData.xml
+    (exact flag/quoting is in NEITH.md)
+  View: Catalog Manager -> Products -> STYLE_CHINO01 -> "Variants" tab (3 colours x 3 sizes = 9 SKUs).
+-->
+<entity-engine-xml>
+
+    <!-- 1) Feature types (idempotent: COLOR/SIZE may pre-exist in OFBiz; FIT is ours) -->
+    <ProductFeatureType productFeatureTypeId="COLOR" description="Colour"/>
+    <ProductFeatureType productFeatureTypeId="SIZE"  description="Size"/>
+    <ProductFeatureType productFeatureTypeId="FIT"   description="Fit"/>
+
+    <!-- 2) Feature categories -->
+    <ProductFeatureCategory productFeatureCategoryId="NEITH_COLOR" description="NEITH Apparel Colours"/>
+    <ProductFeatureCategory productFeatureCategoryId="NEITH_SIZE"  description="NEITH Apparel Sizes (waist)"/>
+
+    <!-- 3) Feature values -->
+    <ProductFeature productFeatureId="COLOR_NAVY"  productFeatureTypeId="COLOR" productFeatureCategoryId="NEITH_COLOR" description="Navy"  abbrev="NVY"/>
+    <ProductFeature productFeatureId="COLOR_BLACK" productFeatureTypeId="COLOR" productFeatureCategoryId="NEITH_COLOR" description="Black" abbrev="BLK"/>
+    <ProductFeature productFeatureId="COLOR_KHAKI" productFeatureTypeId="COLOR" productFeatureCategoryId="NEITH_COLOR" description="Khaki" abbrev="KHK"/>
+    <ProductFeature productFeatureId="SIZE_W32" productFeatureTypeId="SIZE" productFeatureCategoryId="NEITH_SIZE" description="Waist 32" abbrev="W32"/>
+    <ProductFeature productFeatureId="SIZE_W34" productFeatureTypeId="SIZE" productFeatureCategoryId="NEITH_SIZE" description="Waist 34" abbrev="W34"/>
+    <ProductFeature productFeatureId="SIZE_W36" productFeatureTypeId="SIZE" productFeatureCategoryId="NEITH_SIZE" description="Waist 36" abbrev="W36"/>
+
+    <!-- 4) The STYLE = virtual product -->
+    <Product productId="STYLE_CHINO01" productTypeId="FINISHED_GOOD" isVirtual="Y" isVariant="N"
+             productName="Men's Chino Trouser" internalName="STYLE_CHINO01 Men's Chino Trouser"
+             primaryProductCategoryId="CASUAL_PANTS" description="NEITH demo style — chino trouser, colour x size matrix"/>
+
+    <!-- selectable features on the virtual (these define the matrix axes) -->
+    <ProductFeatureAppl productId="STYLE_CHINO01" productFeatureId="COLOR_NAVY"  fromDate="2026-06-18 00:00:00.0" productFeatureApplTypeId="SELECTABLE_FEATURE"/>
+    <ProductFeatureAppl productId="STYLE_CHINO01" productFeatureId="COLOR_BLACK" fromDate="2026-06-18 00:00:00.0" productFeatureApplTypeId="SELECTABLE_FEATURE"/>
+    <ProductFeatureAppl productId="STYLE_CHINO01" productFeatureId="COLOR_KHAKI" fromDate="2026-06-18 00:00:00.0" productFeatureApplTypeId="SELECTABLE_FEATURE"/>
+    <ProductFeatureAppl productId="STYLE_CHINO01" productFeatureId="SIZE_W32" fromDate="2026-06-18 00:00:00.0" productFeatureApplTypeId="SELECTABLE_FEATURE"/>
+    <ProductFeatureAppl productId="STYLE_CHINO01" productFeatureId="SIZE_W34" fromDate="2026-06-18 00:00:00.0" productFeatureApplTypeId="SELECTABLE_FEATURE"/>
+    <ProductFeatureAppl productId="STYLE_CHINO01" productFeatureId="SIZE_W36" fromDate="2026-06-18 00:00:00.0" productFeatureApplTypeId="SELECTABLE_FEATURE"/>
+
+    <!-- 5) Variant products = each Colour x Size cell, with STANDARD_FEATURE appls + PRODUCT_VARIANT assoc -->
+    <!-- NAVY -->
+    <Product productId="CHINO01-NVY-W32" productTypeId="FINISHED_GOOD" isVirtual="N" isVariant="Y" productName="Men's Chino Trouser - Navy / W32" primaryProductCategoryId="CASUAL_PANTS"/>
+    <ProductFeatureAppl productId="CHINO01-NVY-W32" productFeatureId="COLOR_NAVY" fromDate="2026-06-18 00:00:00.0" productFeatureApplTypeId="STANDARD_FEATURE"/>
+    <ProductFeatureAppl productId="CHINO01-NVY-W32" productFeatureId="SIZE_W32"  fromDate="2026-06-18 00:00:00.0" productFeatureApplTypeId="STANDARD_FEATURE"/>
+    <ProductAssoc productId="STYLE_CHINO01" productIdTo="CHINO01-NVY-W32" productAssocTypeId="PRODUCT_VARIANT" fromDate="2026-06-18 00:00:00.0"/>
+    <Product productId="CHINO01-NVY-W34" productTypeId="FINISHED_GOOD" isVirtual="N" isVariant="Y" productName="Men's Chino Trouser - Navy / W34" primaryProductCategoryId="CASUAL_PANTS"/>
+    <ProductFeatureAppl productId="CHINO01-NVY-W34" productFeatureId="COLOR_NAVY" fromDate="2026-06-18 00:00:00.0" productFeatureApplTypeId="STANDARD_FEATURE"/>
+    <ProductFeatureAppl productId="CHINO01-NVY-W34" productFeatureId="SIZE_W34"  fromDate="2026-06-18 00:00:00.0" productFeatureApplTypeId="STANDARD_FEATURE"/>
+    <ProductAssoc productId="STYLE_CHINO01" productIdTo="CHINO01-NVY-W34" productAssocTypeId="PRODUCT_VARIANT" fromDate="2026-06-18 00:00:00.0"/>
+    <Product productId="CHINO01-NVY-W36" productTypeId="FINISHED_GOOD" isVirtual="N" isVariant="Y" productName="Men's Chino Trouser - Navy / W36" primaryProductCategoryId="CASUAL_PANTS"/>
+    <ProductFeatureAppl productId="CHINO01-NVY-W36" productFeatureId="COLOR_NAVY" fromDate="2026-06-18 00:00:00.0" productFeatureApplTypeId="STANDARD_FEATURE"/>
+    <ProductFeatureAppl productId="CHINO01-NVY-W36" productFeatureId="SIZE_W36"  fromDate="2026-06-18 00:00:00.0" productFeatureApplTypeId="STANDARD_FEATURE"/>
+    <ProductAssoc productId="STYLE_CHINO01" productIdTo="CHINO01-NVY-W36" productAssocTypeId="PRODUCT_VARIANT" fromDate="2026-06-18 00:00:00.0"/>
+    <!-- BLACK -->
+    <Product productId="CHINO01-BLK-W32" productTypeId="FINISHED_GOOD" isVirtual="N" isVariant="Y" productName="Men's Chino Trouser - Black / W32" primaryProductCategoryId="CASUAL_PANTS"/>
+    <ProductFeatureAppl productId="CHINO01-BLK-W32" productFeatureId="COLOR_BLACK" fromDate="2026-06-18 00:00:00.0" productFeatureApplTypeId="STANDARD_FEATURE"/>
+    <ProductFeatureAppl productId="CHINO01-BLK-W32" productFeatureId="SIZE_W32"   fromDate="2026-06-18 00:00:00.0" productFeatureApplTypeId="STANDARD_FEATURE"/>
+    <ProductAssoc productId="STYLE_CHINO01" productIdTo="CHINO01-BLK-W32" productAssocTypeId="PRODUCT_VARIANT" fromDate="2026-06-18 00:00:00.0"/>
+    <Product productId="CHINO01-BLK-W34" productTypeId="FINISHED_GOOD" isVirtual="N" isVariant="Y" productName="Men's Chino Trouser - Black / W34" primaryProductCategoryId="CASUAL_PANTS"/>
+    <ProductFeatureAppl productId="CHINO01-BLK-W34" productFeatureId="COLOR_BLACK" fromDate="2026-06-18 00:00:00.0" productFeatureApplTypeId="STANDARD_FEATURE"/>
+    <ProductFeatureAppl productId="CHINO01-BLK-W34" productFeatureId="SIZE_W34"   fromDate="2026-06-18 00:00:00.0" productFeatureApplTypeId="STANDARD_FEATURE"/>
+    <ProductAssoc productId="STYLE_CHINO01" productIdTo="CHINO01-BLK-W34" productAssocTypeId="PRODUCT_VARIANT" fromDate="2026-06-18 00:00:00.0"/>
+    <Product productId="CHINO01-BLK-W36" productTypeId="FINISHED_GOOD" isVirtual="N" isVariant="Y" productName="Men's Chino Trouser - Black / W36" primaryProductCategoryId="CASUAL_PANTS"/>
+    <ProductFeatureAppl productId="CHINO01-BLK-W36" productFeatureId="COLOR_BLACK" fromDate="2026-06-18 00:00:00.0" productFeatureApplTypeId="STANDARD_FEATURE"/>
+    <ProductFeatureAppl productId="CHINO01-BLK-W36" productFeatureId="SIZE_W36"   fromDate="2026-06-18 00:00:00.0" productFeatureApplTypeId="STANDARD_FEATURE"/>
+    <ProductAssoc productId="STYLE_CHINO01" productIdTo="CHINO01-BLK-W36" productAssocTypeId="PRODUCT_VARIANT" fromDate="2026-06-18 00:00:00.0"/>
+    <!-- KHAKI -->
+    <Product productId="CHINO01-KHK-W32" productTypeId="FINISHED_GOOD" isVirtual="N" isVariant="Y" productName="Men's Chino Trouser - Khaki / W32" primaryProductCategoryId="CASUAL_PANTS"/>
+    <ProductFeatureAppl productId="CHINO01-KHK-W32" productFeatureId="COLOR_KHAKI" fromDate="2026-06-18 00:00:00.0" productFeatureApplTypeId="STANDARD_FEATURE"/>
+    <ProductFeatureAppl productId="CHINO01-KHK-W32" productFeatureId="SIZE_W32"   fromDate="2026-06-18 00:00:00.0" productFeatureApplTypeId="STANDARD_FEATURE"/>
+    <ProductAssoc productId="STYLE_CHINO01" productIdTo="CHINO01-KHK-W32" productAssocTypeId="PRODUCT_VARIANT" fromDate="2026-06-18 00:00:00.0"/>
+    <Product productId="CHINO01-KHK-W34" productTypeId="FINISHED_GOOD" isVirtual="N" isVariant="Y" productName="Men's Chino Trouser - Khaki / W34" primaryProductCategoryId="CASUAL_PANTS"/>
+    <ProductFeatureAppl productId="CHINO01-KHK-W34" productFeatureId="COLOR_KHAKI" fromDate="2026-06-18 00:00:00.0" productFeatureApplTypeId="STANDARD_FEATURE"/>
+    <ProductFeatureAppl productId="CHINO01-KHK-W34" productFeatureId="SIZE_W34"   fromDate="2026-06-18 00:00:00.0" productFeatureApplTypeId="STANDARD_FEATURE"/>
+    <ProductAssoc productId="STYLE_CHINO01" productIdTo="CHINO01-KHK-W34" productAssocTypeId="PRODUCT_VARIANT" fromDate="2026-06-18 00:00:00.0"/>
+    <Product productId="CHINO01-KHK-W36" productTypeId="FINISHED_GOOD" isVirtual="N" isVariant="Y" productName="Men's Chino Trouser - Khaki / W36" primaryProductCategoryId="CASUAL_PANTS"/>
+    <ProductFeatureAppl productId="CHINO01-KHK-W36" productFeatureId="COLOR_KHAKI" fromDate="2026-06-18 00:00:00.0" productFeatureApplTypeId="STANDARD_FEATURE"/>
+    <ProductFeatureAppl productId="CHINO01-KHK-W36" productFeatureId="SIZE_W36"   fromDate="2026-06-18 00:00:00.0" productFeatureApplTypeId="STANDARD_FEATURE"/>
+    <ProductAssoc productId="STYLE_CHINO01" productIdTo="CHINO01-KHK-W36" productAssocTypeId="PRODUCT_VARIANT" fromDate="2026-06-18 00:00:00.0"/>
+
+    <!-- 6) Link the virtual style to the existing FtmStyleNumber model (season lives here) -->
+    <FtmStyleNumber styleNumberId="CHINO-01" styleNumber="CHINO-01" buyer="DEMO"
+        description="Men's Chino Trouser (NEITH Phase-1 demo)" productType="Trouser"
+        productCategory="CASUAL_PANTS" season="SS26" status="ACTIVE" productId="STYLE_CHINO01"/>
+
+</entity-engine-xml>
