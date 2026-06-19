@@ -66,4 +66,17 @@
         <attribute name="styleCount"   type="Integer" mode="OUT" optional="true"/>
     </service>
 
+    <!-- ===== Project NEITH Phase 2: size-curve order expansion ===== -->
+    <service name="expandSizeCurveToVariants" engine="groovy"
+        location="component://ftm-garments/groovyScripts/ftm/garments/FtmSizeCurveServices.groovy"
+        invoke="expandSizeCurveToVariants" auth="false">
+        <description>NEITH: expand (virtual style + colours + size-curve + per-colour qty) into per-variant SKU quantities</description>
+        <attribute name="productId"         type="String"     mode="IN"  optional="false"/>
+        <attribute name="sizeCurveId"       type="String"     mode="IN"  optional="false"/>
+        <attribute name="quantityPerColor"  type="BigDecimal" mode="IN"  optional="false"/>
+        <attribute name="colorFeatureIds"   type="List"       mode="IN"  optional="true"/>
+        <attribute name="variantQuantities" type="List"       mode="OUT" optional="false"/>
+        <attribute name="totalQuantity"     type="BigDecimal" mode="OUT" optional="true"/>
+    </service>
+
 </services>
