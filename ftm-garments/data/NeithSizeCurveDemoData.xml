@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Project NEITH Phase 2 demo: a standard chino waist size curve.
+  Ratio 1:2:1 over W32:W34:W36 (e.g. quantityPerColor=100 -> 25/50/25).
+  Prereq: NeithStyleMatrixDemoData.xml loaded (provides ProductFeatureCategory
+  NEITH_SIZE and ProductFeatures SIZE_W32/SIZE_W34/SIZE_W36).
+  Load: see NEITH.md (flat-name copy at framework root, then the gradle
+  load-data command — avoids the grolifant5 slash-in-taskname bug, bug-015).
+-->
+<entity-engine-xml>
+    <FtmSizeCurve sizeCurveId="CHINO_STD_CURVE"
+                  description="Chino standard waist curve W32/W34/W36 (1:2:1)"
+                  productFeatureCategoryId="NEITH_SIZE"/>
+    <FtmSizeCurveItem sizeCurveId="CHINO_STD_CURVE" sizeFeatureId="SIZE_W32" ratio="1" sequenceNum="10"/>
+    <FtmSizeCurveItem sizeCurveId="CHINO_STD_CURVE" sizeFeatureId="SIZE_W34" ratio="2" sequenceNum="20"/>
+    <FtmSizeCurveItem sizeCurveId="CHINO_STD_CURVE" sizeFeatureId="SIZE_W36" ratio="1" sequenceNum="30"/>
+</entity-engine-xml>

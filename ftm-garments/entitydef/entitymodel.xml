@@ -22,4 +22,34 @@
         <prim-key field="styleNumberId"/>
     </entity>
 
+    <!-- ===== Project NEITH Phase 2: size curve (order pack ratios) ===== -->
+    <entity entity-name="FtmSizeCurve" package-name="org.apache.ofbiz.ftm.garments"
+        title="FTM Size Curve" author="FTM Garments (NEITH)" version="1.0">
+        <field name="sizeCurveId"              type="id"/>
+        <field name="description"              type="description"/>
+        <field name="productFeatureCategoryId" type="id"/>
+        <field name="createdDate"              type="date-time"/>
+        <field name="lastModifiedDate"         type="date-time"/>
+        <prim-key field="sizeCurveId"/>
+        <relation type="one" fk-name="FTM_SZCRV_PFC" rel-entity-name="ProductFeatureCategory">
+            <key-map field-name="productFeatureCategoryId"/>
+        </relation>
+    </entity>
+
+    <entity entity-name="FtmSizeCurveItem" package-name="org.apache.ofbiz.ftm.garments"
+        title="FTM Size Curve Item (per-size ratio)" author="FTM Garments (NEITH)" version="1.0">
+        <field name="sizeCurveId"   type="id"/>
+        <field name="sizeFeatureId" type="id"/>
+        <field name="ratio"         type="fixed-point"/>
+        <field name="sequenceNum"   type="numeric"/>
+        <prim-key field="sizeCurveId"/>
+        <prim-key field="sizeFeatureId"/>
+        <relation type="one" fk-name="FTM_SZITM_CRV" rel-entity-name="FtmSizeCurve">
+            <key-map field-name="sizeCurveId"/>
+        </relation>
+        <relation type="one" fk-name="FTM_SZITM_PF" rel-entity-name="ProductFeature">
+            <key-map field-name="sizeFeatureId" rel-field-name="productFeatureId"/>
+        </relation>
+    </entity>
+
 </entitymodel>
