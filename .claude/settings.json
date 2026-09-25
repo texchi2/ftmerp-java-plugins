@@ -1,58 +1,9 @@
 {
   "hooks": {
-    "SessionStart": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR/.wolf/hooks/session-start.js\"",
-            "timeout": 5
-          }
-        ]
-      }
-    ],
-    "PreToolUse": [
-      {
-        "matcher": "Read",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR/.wolf/hooks/pre-read.js\"",
-            "timeout": 5
-          }
-        ]
-      },
-      {
-        "matcher": "Write|Edit|MultiEdit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR/.wolf/hooks/pre-write.js\"",
-            "timeout": 5
-          }
-        ]
-      }
-    ],
     "PostToolUse": [
       {
-        "matcher": "Read",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR/.wolf/hooks/post-read.js\"",
-            "timeout": 5
-          }
-        ]
-      },
-      {
         "matcher": "Write|Edit|MultiEdit",
         "hooks": [
-          {
-            "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR/.wolf/hooks/post-write.js\"",
-            "timeout": 10
-          },
           {
             "type": "command",
             "command": "bash -c 'f=$(echo \"$CLAUDE_TOOL_INPUT\" | python3 -c \"import json,sys; d=json.load(sys.stdin); print(d.get(\\\"file_path\\\",d.get(\\\"path\\\",\\\"\\\")))\" 2>/dev/null); [[ \"$f\" == *.xml ]] && xmllint --noout \"$f\" 2>&1 | sed \"s|^|[xml-lint] |\" && echo \"✓ XML valid: $(basename $f)\" || true'",
@@ -67,18 +18,6 @@
             "type": "command",
             "command": "bash -c 'ssh -o BatchMode=yes -o ConnectTimeout=3 texchi@192.168.30.102 \"grep ERROR /opt/ofbiz-framework/runtime/logs/ofbiz.log 2>/dev/null | tail -3 | sed s/^/[ofbiz-log]\\ /\" 2>/dev/null || true'",
             "timeout": 8
-          }
-        ]
-      }
-    ],
-    "Stop": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR/.wolf/hooks/stop.js\"",
-            "timeout": 10
           }
         ]
       }
