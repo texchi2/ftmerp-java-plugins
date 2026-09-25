@@ -1,8 +1,6 @@
-# OpenWolf
-
-@.wolf/OPENWOLF.md
-
-This project uses OpenWolf for context management. Read and follow .wolf/OPENWOLF.md every session. Check .wolf/cerebrum.md before generating code. Check .wolf/anatomy.md before reading files.
+> **OpenWolf is disabled in this repo** (2026-09-25, the Captain: *"it should also disabled"*). `.wolf/` is kept
+> as project memory only — check `.wolf/cerebrum.md` (accumulated OFBiz knowledge + failure patterns) before
+> generating code.
 
 
 # FTM OFBiz Development
@@ -112,7 +110,7 @@ cat /opt/ofbiz-plugins/.claude-code-state.json | \
 Claude Code preserves context across model switches via compaction:
 - Compaction triggers automatically near context limit
 - Summarizes: architectural decisions, unresolved bugs, implementation state
-- CLAUDE.md + .wolf/cerebrum.md always loaded = persistent project context
+- CLAUDE.md always loaded; `.wolf/cerebrum.md` read before generating code = persistent project context
 - Session handoff: update `.claude-code-state.json` before switching machines
 
 ### Shared State Files
