@@ -11,6 +11,8 @@
     <service-resource type="model" loader="main"
         location="servicedef/services.xml"/>
 
+    <test-suite loader="main" location="testdef/FtmGarmentsTests.xml"/>
+
     <widget-resource type="screen" location="widget/FtmGarmentsCommonScreens.xml"/>
     <widget-resource type="screen" location="widget/FtmGarmentsScreens.xml"/>
 
