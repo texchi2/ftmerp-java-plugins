@@ -26,11 +26,16 @@ under the License.
     <!-- a second row with the same key (other case): the first row must win, as in the workbook's VLOOKUP -->
     <ProductFeature productFeatureId="SKU_TEST_C_ZZ" productFeatureTypeId="SKU_TEST_COLOR" description="BLACK" idCode="ZZ" defaultSequenceNum="3"/>
 
+    <!-- the allowed list of the Name input (a workbook drop-down, in the real rules) -->
+    <ProductFeatureType productFeatureTypeId="SKU_TEST_NAMES" description="Test SKU allowed names"/>
+    <ProductFeature productFeatureId="SKU_TEST_N_1" productFeatureTypeId="SKU_TEST_NAMES" description="abc" defaultSequenceNum="1"/>
+    <ProductFeature productFeatureId="SKU_TEST_N_2" productFeatureTypeId="SKU_TEST_NAMES" description="abcdef" defaultSequenceNum="2"/>
+
     <FtmSkuRule skuRuleId="TEST_SKU" description="Synthetic test rule" codeLength="10"/>
     <FtmSkuRuleSegment skuRuleId="TEST_SKU" sequenceNum="10" segmentTypeId="LITERAL" literalText="T"/>
     <FtmSkuRuleSegment skuRuleId="TEST_SKU" sequenceNum="20" segmentTypeId="FEATURE" inputName="Colour" productFeatureTypeId="SKU_TEST_COLOR"/>
     <FtmSkuRuleSegment skuRuleId="TEST_SKU" sequenceNum="30" segmentTypeId="LITERAL" literalText="-"/>
-    <FtmSkuRuleSegment skuRuleId="TEST_SKU" sequenceNum="40" segmentTypeId="TEXT" inputName="Name" textOps="LEFT:3|UPPER|TRIM"/>
+    <FtmSkuRuleSegment skuRuleId="TEST_SKU" sequenceNum="40" segmentTypeId="TEXT" inputName="Name" textOps="LEFT:3|UPPER|TRIM" allowedFeatureTypeId="SKU_TEST_NAMES"/>
     <FtmSkuRuleSegment skuRuleId="TEST_SKU" sequenceNum="50" segmentTypeId="INPUT" inputName="Seq"/>
 
     <FtmSkuRule skuRuleId="TEST_SKU_LEN" description="Synthetic rule whose codes never have the required length" codeLength="99"/>

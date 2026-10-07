@@ -72,7 +72,11 @@ Map composeFor(String skuRuleId, Map rawValues, List productFeatureIds) {
         return from('ProductFeature').where('productFeatureTypeId', typeId).orderBy('defaultSequenceNum').cache()
                 .queryList().find { GenericValue f -> v.equalsIgnoreCase(f.description as String) }
     }
-    Map out = SkuComposer.compose(segs, values, featureFor)
+    Closure<Boolean> allowedFor = { String typeId, String value ->
+        from('ProductFeature').where('productFeatureTypeId', typeId).cache().queryList()
+                .any { GenericValue f -> value.equalsIgnoreCase(f.description as String) }
+    }
+    Map out = SkuComposer.compose(segs, values, featureFor, allowedFor)
     out.lengthValid = rule.codeLength == null || out.canonical.length() == (rule.codeLength as int)
     out.rule = rule
     out.wantAttrs = segs.findAll { GenericValue s -> s.segmentTypeId in ['INPUT', 'TEXT'] }

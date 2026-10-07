@@ -65,6 +65,13 @@ class SkuServiceTests extends OFBizTestCase {
         assert ServiceUtil.isError(generate([Colour: 'Black', Name: '', Seq: '0001']))
     }
 
+    void testValueOutsideTheAllowedListIsRefused() {
+        Map outside = generate([Colour: 'Black', Name: 'qqq', Seq: '0001'])
+        assert ServiceUtil.isError(outside)
+        assert ServiceUtil.getErrorMessage(outside).contains('allowed list')
+        assert ServiceUtil.isSuccess(generate([Colour: 'Black', Name: 'ABC', Seq: '0001']))  // case-insensitive, as the lookups
+    }
+
     void testChosenFeatureIdsGiveTheSameCode() {
         Map result = dispatcher.runSync('generateTrimSku',
                 [skuRuleId: RULE, productFeatureIds: ['SKU_TEST_C_WH'], values: [Name: 'abc', Seq: '0001']])

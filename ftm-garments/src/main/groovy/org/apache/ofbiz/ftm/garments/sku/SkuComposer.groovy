@@ -27,6 +27,7 @@ package org.apache.ofbiz.ftm.garments.sku
  *   INPUT    emit the caller's value for inputName, verbatim
  *   TEXT     emit the value after textOps, applied in order: LEFT:n | RIGHT:n | UPPER | TRIM (Excel semantics)
  *   FEATURE  emit the idCode of the ProductFeature the closure resolves for (productFeatureTypeId, inputName)
+ * INPUT and TEXT may carry allowedFeatureTypeId (the workbook's drop-down): a value outside that list is refused.
  * A missing value or an unresolved feature REFUSES the whole code (SkuRefusedException) — never a partial code.
  * The canonical form drops only the dashes the rule itself emits as LITERAL separators; a dash inside a looked-up
  * value or an input is part of the code (the workbook counts it, and its LEN check fails on it).
@@ -41,10 +42,11 @@ final class SkuComposer {
      * @param segments ordered segment maps (segmentTypeId, literalText, inputName, productFeatureTypeId, textOps)
      * @param values inputName to value
      * @param featureFor (productFeatureTypeId, inputName) to a map with productFeatureId and idCode, or null
+     * @param allowedFor (allowedFeatureTypeId, value) to true when the value is in that list; null = no list checks
      * @return [code, canonical (code without the rule's literal dashes), featureIds (in segment order),
      *          attributes (inputName to value, for INPUT and TEXT segments)]
      */
-    static Map compose(List<Map> segments, Map<String, String> values, Closure<Map> featureFor) {
+    static Map compose(List<Map> segments, Map<String, String> values, Closure<Map> featureFor, Closure<Boolean> allowedFor = null) {
         StringBuilder code = new StringBuilder()
         StringBuilder canonical = new StringBuilder()
         List<String> featureIds = []
@@ -60,11 +62,11 @@ final class SkuComposer {
                     canonical.append(piece.replace('-', ''))
                     continue
                 case 'INPUT':
-                    piece = required(values, name)
+                    piece = allowed(seg, required(values, name), allowedFor)
                     attributes[name] = values[name]
                     break
                 case 'TEXT':
-                    piece = applyTextOps(required(values, name), seg.textOps as String)
+                    piece = applyTextOps(allowed(seg, required(values, name), allowedFor), seg.textOps as String)
                     attributes[name] = values[name]
                     break
                 case 'FEATURE':
@@ -113,6 +115,14 @@ final class SkuComposer {
     /** A code TYPED by a person, in either form, normalised for lookup: dashes removed, upper case. */
     static String canonical(String code) {
         return code == null ? null : code.replace('-', '').trim().toUpperCase(Locale.ROOT)
+    }
+
+    private static String allowed(Map seg, String value, Closure<Boolean> allowedFor) {
+        String list = seg.allowedFeatureTypeId
+        if (list && allowedFor != null && !allowedFor(list, value)) {
+            throw new SkuRefusedException("${seg.inputName} = [${value}] is not in the allowed list [${list}]")
+        }
+        return value
     }
 
     private static String required(Map<String, String> values, String name) {

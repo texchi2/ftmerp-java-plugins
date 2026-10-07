@@ -17,11 +17,14 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 -->
-<!-- The workbook oracle. Needs the PRIVATE SKU seed loaded and the private fixtures file present
+<!-- The seed-count check and the workbook oracle. Need the PRIVATE SKU seed loaded and the private fixtures file present
      (system property ftm.sku.fixtures, default ~/ftm-sku-data/fixtures_ofbiz.jsonl); without them it FAILS. -->
 <test-suite suite-name="ftmskuoracle"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="https://ofbiz.apache.org/dtds/test-suite.xsd">
+    <test-case case-name="sku-seed-counts">
+        <junit-test-suite class-name="org.apache.ofbiz.ftm.garments.test.SkuSeedTests"/>
+    </test-case>
     <test-case case-name="sku-workbook-oracle">
         <junit-test-suite class-name="org.apache.ofbiz.ftm.garments.test.SkuOracleTests"/>
     </test-case>

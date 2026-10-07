@@ -72,6 +72,7 @@
         <field name="inputName"            type="description"><description>Key of the caller's value for this segment</description></field>
         <field name="productFeatureTypeId" type="id"><description>FEATURE: the value is matched to ProductFeature.description of this type; idCode is emitted</description></field>
         <field name="textOps"              type="short-varchar"><description>TEXT: ops applied in order, e.g. LEFT:3|UPPER|TRIM</description></field>
+        <field name="allowedFeatureTypeId" type="id"><description>INPUT/TEXT: when set, the value must be one of this type's ProductFeature descriptions (the workbook's drop-down list)</description></field>
         <prim-key field="skuRuleId"/>
         <prim-key field="sequenceNum"/>
         <relation type="one" fk-name="FTM_SKUSEG_RULE" rel-entity-name="FtmSkuRule">
@@ -79,6 +80,9 @@
         </relation>
         <relation type="one" fk-name="FTM_SKUSEG_PFT" rel-entity-name="ProductFeatureType">
             <key-map field-name="productFeatureTypeId"/>
+        </relation>
+        <relation type="one" fk-name="FTM_SKUSEG_ALW" title="Allowed" rel-entity-name="ProductFeatureType">
+            <key-map field-name="allowedFeatureTypeId" rel-field-name="productFeatureTypeId"/>
         </relation>
     </entity>
 
