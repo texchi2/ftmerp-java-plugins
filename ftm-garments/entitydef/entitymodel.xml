@@ -52,4 +52,34 @@
         </relation>
     </entity>
 
+    <!-- ===== SKU generator: a rule per item category = ordered segments (playbook PLAYBOOK_SKU S2) =====
+         The rule rows and the lookup features are DATA, loaded from the owner's workbooks through a
+         private seed; nothing workbook-derived lives in this repository. -->
+    <entity entity-name="FtmSkuRule" package-name="org.apache.ofbiz.ftm.garments"
+        title="FTM SKU Rule" author="FTM Garments" version="1.0">
+        <field name="skuRuleId"   type="id"/>
+        <field name="description" type="description"/>
+        <field name="codeLength"  type="numeric"><description>Required length of the canonical (undashed) code</description></field>
+        <prim-key field="skuRuleId"/>
+    </entity>
+
+    <entity entity-name="FtmSkuRuleSegment" package-name="org.apache.ofbiz.ftm.garments"
+        title="FTM SKU Rule Segment" author="FTM Garments" version="1.0">
+        <field name="skuRuleId"            type="id"/>
+        <field name="sequenceNum"          type="numeric"/>
+        <field name="segmentTypeId"        type="id"><description>LITERAL | INPUT | TEXT | FEATURE</description></field>
+        <field name="literalText"          type="short-varchar"/>
+        <field name="inputName"            type="description"><description>Key of the caller's value for this segment</description></field>
+        <field name="productFeatureTypeId" type="id"><description>FEATURE: the value is matched to ProductFeature.description of this type; idCode is emitted</description></field>
+        <field name="textOps"              type="short-varchar"><description>TEXT: ops applied in order, e.g. LEFT:3|UPPER|TRIM</description></field>
+        <prim-key field="skuRuleId"/>
+        <prim-key field="sequenceNum"/>
+        <relation type="one" fk-name="FTM_SKUSEG_RULE" rel-entity-name="FtmSkuRule">
+            <key-map field-name="skuRuleId"/>
+        </relation>
+        <relation type="one" fk-name="FTM_SKUSEG_PFT" rel-entity-name="ProductFeatureType">
+            <key-map field-name="productFeatureTypeId"/>
+        </relation>
+    </entity>
+
 </entitymodel>

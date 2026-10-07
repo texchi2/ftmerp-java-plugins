@@ -79,4 +79,45 @@
         <attribute name="totalQuantity"     type="BigDecimal" mode="OUT" optional="true"/>
     </service>
 
+    <!-- ===== SKU generator (PLAYBOOK_SKU S2) ===== -->
+    <service name="generateTrimSku" engine="groovy"
+        location="component://ftm-garments/groovyScripts/ftm/garments/FtmSkuServices.groovy"
+        invoke="generateTrimSku" auth="false">
+        <description>Pure: compute the SKU code of an item from its attribute values (by segment inputName) and/or
+            chosen ProductFeature ids. Refuses when a FEATURE value has no matching feature or an input is missing.
+            Writes nothing.</description>
+        <attribute name="skuRuleId"         type="String" mode="IN"  optional="false"/>
+        <attribute name="values"            type="Map"    mode="IN"  optional="true"/>
+        <attribute name="productFeatureIds" type="List"   mode="IN"  optional="true"/>
+        <attribute name="skuCode"           type="String" mode="OUT" optional="false"/>
+        <attribute name="canonicalCode"     type="String" mode="OUT" optional="false"/>
+        <attribute name="lengthValid"       type="Boolean" mode="OUT" optional="false"/>
+        <attribute name="featureIds"        type="List"   mode="OUT" optional="false"/>
+        <attribute name="attributes"        type="Map"    mode="OUT" optional="false"/>
+    </service>
+
+    <service name="createTrimProduct" engine="groovy"
+        location="component://ftm-garments/groovyScripts/ftm/garments/FtmSkuServices.groovy"
+        invoke="createTrimProduct" auth="true">
+        <description>Create (or return) the raw-material Product for an item: features applied, segment inputs as
+            ProductAttribute, GoodIdentification SKU = canonical code (+ FTM_SKU_DASHED alias when the rule emits dashes).
+            Idempotent: the same item twice returns the same product. A code already held by an item with different
+            attributes is REFUSED, never overwritten. A code of the wrong length is refused.</description>
+        <attribute name="skuRuleId"         type="String" mode="IN"  optional="false"/>
+        <attribute name="values"            type="Map"    mode="IN"  optional="true"/>
+        <attribute name="productFeatureIds" type="List"   mode="IN"  optional="true"/>
+        <attribute name="productName"       type="String" mode="IN"  optional="true"/>
+        <attribute name="productId"         type="String" mode="OUT" optional="false"/>
+        <attribute name="canonicalCode"     type="String" mode="OUT" optional="false"/>
+        <attribute name="created"           type="Boolean" mode="OUT" optional="false"/>
+    </service>
+
+    <service name="findProductBySku" engine="groovy"
+        location="component://ftm-garments/groovyScripts/ftm/garments/FtmSkuServices.groovy"
+        invoke="findProductBySku" auth="true">
+        <description>Find the product of an SKU code given in either form (dashed or undashed).</description>
+        <attribute name="skuCode"   type="String" mode="IN"  optional="false"/>
+        <attribute name="productId" type="String" mode="OUT" optional="true"/>
+    </service>
+
 </services>

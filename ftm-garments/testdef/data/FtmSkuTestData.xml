@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+<!-- SYNTHETIC test rule for the SKU services: invented values, no real item data.
+     TEST_SKU emits  T + colour code + "-" + LEFT(name,3) upper/trimmed + sequence   e.g. TBK-ABC0001 (10 undashed) -->
+<entity-engine-xml>
+    <ProductFeatureType productFeatureTypeId="SKU_TEST_COLOR" description="Test SKU colour"/>
+    <ProductFeature productFeatureId="SKU_TEST_C_BK" productFeatureTypeId="SKU_TEST_COLOR" description="Black" idCode="BK" defaultSequenceNum="1"/>
+    <ProductFeature productFeatureId="SKU_TEST_C_WH" productFeatureTypeId="SKU_TEST_COLOR" description="White" idCode="WH" defaultSequenceNum="2"/>
+    <!-- a second row with the same key (other case): the first row must win, as in the workbook's VLOOKUP -->
+    <ProductFeature productFeatureId="SKU_TEST_C_ZZ" productFeatureTypeId="SKU_TEST_COLOR" description="BLACK" idCode="ZZ" defaultSequenceNum="3"/>
+
+    <FtmSkuRule skuRuleId="TEST_SKU" description="Synthetic test rule" codeLength="10"/>
+    <FtmSkuRuleSegment skuRuleId="TEST_SKU" sequenceNum="10" segmentTypeId="LITERAL" literalText="T"/>
+    <FtmSkuRuleSegment skuRuleId="TEST_SKU" sequenceNum="20" segmentTypeId="FEATURE" inputName="Colour" productFeatureTypeId="SKU_TEST_COLOR"/>
+    <FtmSkuRuleSegment skuRuleId="TEST_SKU" sequenceNum="30" segmentTypeId="LITERAL" literalText="-"/>
+    <FtmSkuRuleSegment skuRuleId="TEST_SKU" sequenceNum="40" segmentTypeId="TEXT" inputName="Name" textOps="LEFT:3|UPPER|TRIM"/>
+    <FtmSkuRuleSegment skuRuleId="TEST_SKU" sequenceNum="50" segmentTypeId="INPUT" inputName="Seq"/>
+
+    <FtmSkuRule skuRuleId="TEST_SKU_LEN" description="Synthetic rule whose codes never have the required length" codeLength="99"/>
+    <FtmSkuRuleSegment skuRuleId="TEST_SKU_LEN" sequenceNum="10" segmentTypeId="LITERAL" literalText="X"/>
+
+    <!-- a product already holding the code that White / "abc" / 0002 would produce, with other attributes -->
+    <Product productId="TEST_SKU_SQUAT" productTypeId="RAW_MATERIAL" internalName="TEST_SKU_SQUAT" isVirtual="N" isVariant="N"/>
+    <GoodIdentification goodIdentificationTypeId="SKU" productId="TEST_SKU_SQUAT" idValue="TWHABC0002"/>
+</entity-engine-xml>

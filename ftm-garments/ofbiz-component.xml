@@ -12,6 +12,8 @@
         location="servicedef/services.xml"/>
 
     <test-suite loader="main" location="testdef/FtmGarmentsTests.xml"/>
+    <test-suite loader="main" location="testdef/FtmSkuTests.xml"/>
+    <test-suite loader="main" location="testdef/FtmSkuOracleTests.xml"/>
 
     <widget-resource type="screen" location="widget/FtmGarmentsCommonScreens.xml"/>
     <widget-resource type="screen" location="widget/FtmGarmentsScreens.xml"/>
