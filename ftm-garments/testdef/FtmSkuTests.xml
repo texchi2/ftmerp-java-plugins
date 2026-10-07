@@ -27,6 +27,12 @@ under the License.
     <test-case case-name="load-sku-test-data">
         <entity-xml action="load" entity-xml-url="component://ftm-garments/testdef/data/FtmSkuTestData.xml"/>
     </test-case>
+    <test-case case-name="load-garment-sku-test-data">
+        <entity-xml action="load" entity-xml-url="component://ftm-garments/testdef/data/FtmGarmentSkuTestData.xml"/>
+    </test-case>
+    <test-case case-name="garment-sku-tests">
+        <junit-test-suite class-name="org.apache.ofbiz.ftm.garments.test.GarmentSkuTests"/>
+    </test-case>
     <test-case case-name="sku-service-tests">
         <junit-test-suite class-name="org.apache.ofbiz.ftm.garments.test.SkuServiceTests"/>
     </test-case>

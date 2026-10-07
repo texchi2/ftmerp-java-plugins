@@ -126,6 +126,20 @@
         <attribute name="created"           type="Boolean" mode="OUT" optional="false"/>
     </service>
 
+    <service name="assignGarmentSkus" engine="groovy"
+        location="component://ftm-garments/groovyScripts/ftm/garments/FtmGarmentSkuServices.groovy"
+        invoke="assignGarmentSkus" auth="true">
+        <description>PLAYBOOK_SKU S5: give every variant of a style its garment SKU (GoodIdentification SKU, + dashed
+            alias), composed by an FtmSkuRule from STYLE / STYLE_ID and the variant's colour and size features.
+            SWITCHED OFF unless ftm-garments / garmentSku.enabled = Y (SystemProperty overrides the properties file).
+            All codes are checked before any is written; a used code, a wrong length or a different existing SKU
+            refuses the whole style.</description>
+        <attribute name="productId"       type="String" mode="IN"  optional="false"/>
+        <attribute name="skuRuleId"       type="String" mode="IN"  optional="true"/>
+        <attribute name="assigned"        type="List"   mode="OUT" optional="false"/>
+        <attribute name="alreadyAssigned" type="List"   mode="OUT" optional="false"/>
+    </service>
+
     <service name="findProductBySku" engine="groovy"
         location="component://ftm-garments/groovyScripts/ftm/garments/FtmSkuServices.groovy"
         invoke="findProductBySku" auth="true">
