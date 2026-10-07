@@ -140,6 +140,47 @@
         <attribute name="alreadyAssigned" type="List"   mode="OUT" optional="false"/>
     </service>
 
+    <service name="assignCustomerSkus" engine="groovy"
+        location="component://ftm-garments/groovyScripts/ftm/garments/FtmGarmentSkuServices.groovy"
+        invoke="assignCustomerSkus" auth="true">
+        <description>Record a customer's own per-size item codes on a style's variants of one colour, as GoodIdentification
+            of a customer type (child of FTM_CUSTOMER_SKU). All checked before any write; a code already used, or a
+            variant holding a different code, refuses the whole call.</description>
+        <attribute name="productId"                type="String" mode="IN"  optional="false"/>
+        <attribute name="colorFeatureId"           type="String" mode="IN"  optional="false"/>
+        <attribute name="goodIdentificationTypeId" type="String" mode="IN"  optional="false"/>
+        <attribute name="skuBySizeFeatureId"       type="Map"    mode="IN"  optional="false"/>
+        <attribute name="assigned"                 type="List"   mode="OUT" optional="false"/>
+        <attribute name="alreadyAssigned"          type="List"   mode="OUT" optional="false"/>
+    </service>
+
+    <!-- ===== Garment BOM + colour package (PLAYBOOK_SKU S6) ===== -->
+    <service name="setColourPackage" engine="groovy"
+        location="component://ftm-garments/groovyScripts/ftm/garments/FtmBomServices.groovy"
+        invoke="setColourPackage" auth="true">
+        <description>One colour-package row: on style X, garment colour C takes trim T for the virtual BOM line V
+            (a ProductManufacturingRule). Idempotent; a different existing mapping is refused, never overwritten.</description>
+        <attribute name="productId"             type="String" mode="IN"  optional="false"/>
+        <attribute name="garmentColorFeatureId" type="String" mode="IN"  optional="false"/>
+        <attribute name="componentProductId"    type="String" mode="IN"  optional="false"/>
+        <attribute name="trimProductId"         type="String" mode="IN"  optional="false"/>
+        <attribute name="quantity"              type="BigDecimal" mode="IN" optional="true"/>
+        <attribute name="ruleId"                type="String" mode="OUT" optional="true"/>
+        <attribute name="created"               type="Boolean" mode="OUT" optional="false"/>
+    </service>
+
+    <service name="getVariantBom" engine="groovy"
+        location="component://ftm-garments/groovyScripts/ftm/garments/FtmBomServices.groovy"
+        invoke="getVariantBom" auth="true">
+        <description>The resolved single-level BOM of a garment variant (OFBiz explosion, colour package applied), with
+            quantities for the given garment quantity. Refuses when a trim is left unresolved (still virtual).</description>
+        <attribute name="productId"              type="String"     mode="IN"  optional="false"/>
+        <attribute name="quantity"               type="BigDecimal" mode="IN"  optional="true"/>
+        <attribute name="requireResolved"        type="Boolean"    mode="IN"  optional="true"/>
+        <attribute name="components"             type="List"       mode="OUT" optional="false"/>
+        <attribute name="unresolvedComponentIds" type="List"       mode="OUT" optional="false"/>
+    </service>
+
     <service name="findProductBySku" engine="groovy"
         location="component://ftm-garments/groovyScripts/ftm/garments/FtmSkuServices.groovy"
         invoke="findProductBySku" auth="true">

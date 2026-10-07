@@ -33,6 +33,12 @@ under the License.
     <test-case case-name="garment-sku-tests">
         <junit-test-suite class-name="org.apache.ofbiz.ftm.garments.test.GarmentSkuTests"/>
     </test-case>
+    <test-case case-name="load-bom-test-data">
+        <entity-xml action="load" entity-xml-url="component://ftm-garments/testdef/data/FtmBomTestData.xml"/>
+    </test-case>
+    <test-case case-name="bom-and-customer-sku-tests">
+        <junit-test-suite class-name="org.apache.ofbiz.ftm.garments.test.BomColourPackageTests"/>
+    </test-case>
     <test-case case-name="sku-service-tests">
         <junit-test-suite class-name="org.apache.ofbiz.ftm.garments.test.SkuServiceTests"/>
     </test-case>

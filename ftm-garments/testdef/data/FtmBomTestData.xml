@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+<!-- SYNTHETIC garment BOM + colour package (invented). Uses TG_CLR_RD / TG_CLR_BL / TG_SZ_S from FtmGarmentSkuTestData.
+     Style TEST_BSTYLE (red, blue, green variants, size S). BOM per garment: 1 zipper (virtual, colour by SHARED feature),
+     4 buttons (virtual, colours NOT shared - needs the package), 150 thread (concrete). Green has no package. -->
+<entity-engine-xml>
+    <ProductFeature productFeatureId="TG_CLR_GN" productFeatureTypeId="COLOR" description="Test green" abbrev="GN" idCode="GN"/>
+    <ProductFeature productFeatureId="TB_BTN_WH" productFeatureTypeId="COLOR" description="Test button white" abbrev="WH"/>
+    <ProductFeature productFeatureId="TB_BTN_BK" productFeatureTypeId="COLOR" description="Test button black" abbrev="BK"/>
+
+    <Product productId="TEST_BSTYLE" productTypeId="FINISHED_GOOD" isVirtual="Y" isVariant="N" internalName="TEST_BSTYLE"/>
+    <Product productId="TEST_B_RD" productTypeId="FINISHED_GOOD" isVirtual="N" isVariant="Y" internalName="TEST_B_RD"/>
+    <Product productId="TEST_B_BL" productTypeId="FINISHED_GOOD" isVirtual="N" isVariant="Y" internalName="TEST_B_BL"/>
+    <Product productId="TEST_B_GN" productTypeId="FINISHED_GOOD" isVirtual="N" isVariant="Y" internalName="TEST_B_GN"/>
+    <ProductAssoc productId="TEST_BSTYLE" productIdTo="TEST_B_RD" productAssocTypeId="PRODUCT_VARIANT" fromDate="2026-10-01 00:00:00.0"/>
+    <ProductAssoc productId="TEST_BSTYLE" productIdTo="TEST_B_BL" productAssocTypeId="PRODUCT_VARIANT" fromDate="2026-10-01 00:00:00.0"/>
+    <ProductAssoc productId="TEST_BSTYLE" productIdTo="TEST_B_GN" productAssocTypeId="PRODUCT_VARIANT" fromDate="2026-10-01 00:00:00.0"/>
+    <ProductFeatureAppl productId="TEST_B_RD" productFeatureId="TG_CLR_RD" productFeatureApplTypeId="STANDARD_FEATURE" fromDate="2026-10-01 00:00:00.0"/>
+    <ProductFeatureAppl productId="TEST_B_RD" productFeatureId="TG_SZ_S" productFeatureApplTypeId="STANDARD_FEATURE" fromDate="2026-10-01 00:00:00.0"/>
+    <ProductFeatureAppl productId="TEST_B_BL" productFeatureId="TG_CLR_BL" productFeatureApplTypeId="STANDARD_FEATURE" fromDate="2026-10-01 00:00:00.0"/>
+    <ProductFeatureAppl productId="TEST_B_BL" productFeatureId="TG_SZ_S" productFeatureApplTypeId="STANDARD_FEATURE" fromDate="2026-10-01 00:00:00.0"/>
+    <ProductFeatureAppl productId="TEST_B_GN" productFeatureId="TG_CLR_GN" productFeatureApplTypeId="STANDARD_FEATURE" fromDate="2026-10-01 00:00:00.0"/>
+    <ProductFeatureAppl productId="TEST_B_GN" productFeatureId="TG_SZ_S" productFeatureApplTypeId="STANDARD_FEATURE" fromDate="2026-10-01 00:00:00.0"/>
+
+    <!-- trims: zipper (virtual) with variants sharing the garment colours; button (virtual) with its own colours; thread -->
+    <Product productId="TEST_ZIP_V" productTypeId="RAW_MATERIAL" isVirtual="Y" isVariant="N" internalName="TEST_ZIP_V"/>
+    <Product productId="TEST_ZIP_RD" productTypeId="RAW_MATERIAL" isVirtual="N" isVariant="Y" internalName="TEST_ZIP_RD"/>
+    <Product productId="TEST_ZIP_BL" productTypeId="RAW_MATERIAL" isVirtual="N" isVariant="Y" internalName="TEST_ZIP_BL"/>
+    <Product productId="TEST_ZIP_GN" productTypeId="RAW_MATERIAL" isVirtual="N" isVariant="Y" internalName="TEST_ZIP_GN"/>
+    <ProductAssoc productId="TEST_ZIP_V" productIdTo="TEST_ZIP_RD" productAssocTypeId="PRODUCT_VARIANT" fromDate="2026-10-01 00:00:00.0"/>
+    <ProductAssoc productId="TEST_ZIP_V" productIdTo="TEST_ZIP_BL" productAssocTypeId="PRODUCT_VARIANT" fromDate="2026-10-01 00:00:00.0"/>
+    <ProductAssoc productId="TEST_ZIP_V" productIdTo="TEST_ZIP_GN" productAssocTypeId="PRODUCT_VARIANT" fromDate="2026-10-01 00:00:00.0"/>
+    <ProductFeatureAppl productId="TEST_ZIP_RD" productFeatureId="TG_CLR_RD" productFeatureApplTypeId="STANDARD_FEATURE" fromDate="2026-10-01 00:00:00.0"/>
+    <ProductFeatureAppl productId="TEST_ZIP_BL" productFeatureId="TG_CLR_BL" productFeatureApplTypeId="STANDARD_FEATURE" fromDate="2026-10-01 00:00:00.0"/>
+    <ProductFeatureAppl productId="TEST_ZIP_GN" productFeatureId="TG_CLR_GN" productFeatureApplTypeId="STANDARD_FEATURE" fromDate="2026-10-01 00:00:00.0"/>
+    <Product productId="TEST_BTN_V" productTypeId="RAW_MATERIAL" isVirtual="Y" isVariant="N" internalName="TEST_BTN_V"/>
+    <Product productId="TEST_BTN_WH" productTypeId="RAW_MATERIAL" isVirtual="N" isVariant="Y" internalName="TEST_BTN_WH"/>
+    <Product productId="TEST_BTN_BK" productTypeId="RAW_MATERIAL" isVirtual="N" isVariant="Y" internalName="TEST_BTN_BK"/>
+    <ProductAssoc productId="TEST_BTN_V" productIdTo="TEST_BTN_WH" productAssocTypeId="PRODUCT_VARIANT" fromDate="2026-10-01 00:00:00.0"/>
+    <ProductAssoc productId="TEST_BTN_V" productIdTo="TEST_BTN_BK" productAssocTypeId="PRODUCT_VARIANT" fromDate="2026-10-01 00:00:00.0"/>
+    <ProductFeatureAppl productId="TEST_BTN_WH" productFeatureId="TB_BTN_WH" productFeatureApplTypeId="STANDARD_FEATURE" fromDate="2026-10-01 00:00:00.0"/>
+    <ProductFeatureAppl productId="TEST_BTN_BK" productFeatureId="TB_BTN_BK" productFeatureApplTypeId="STANDARD_FEATURE" fromDate="2026-10-01 00:00:00.0"/>
+    <Product productId="TEST_THR" productTypeId="RAW_MATERIAL" isVirtual="N" isVariant="N" internalName="TEST_THR"/>
+
+    <!-- the BOM, on the virtual style -->
+    <ProductAssoc productId="TEST_BSTYLE" productIdTo="TEST_ZIP_V" productAssocTypeId="MANUF_COMPONENT" fromDate="2026-10-01 00:00:00.0" quantity="1" sequenceNum="10"/>
+    <ProductAssoc productId="TEST_BSTYLE" productIdTo="TEST_BTN_V" productAssocTypeId="MANUF_COMPONENT" fromDate="2026-10-01 00:00:00.0" quantity="4" sequenceNum="20"/>
+    <ProductAssoc productId="TEST_BSTYLE" productIdTo="TEST_THR" productAssocTypeId="MANUF_COMPONENT" fromDate="2026-10-01 00:00:00.0" quantity="150" sequenceNum="30"/>
+
+    <!-- a customer SKU type for the synthetic customer -->
+    <GoodIdentificationType goodIdentificationTypeId="TEST_CUST_SKU" parentTypeId="FTM_CUSTOMER_SKU" hasTable="N" description="Test customer SKU"/>
+    <GoodIdentificationType goodIdentificationTypeId="TEST_NOT_CUST" hasTable="N" description="Not a customer SKU type"/>
+</entity-engine-xml>

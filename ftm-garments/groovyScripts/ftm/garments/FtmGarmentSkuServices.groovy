@@ -102,3 +102,62 @@ def assignGarmentSkus() {
 List<String> variantIdsSorted(List<String> ids) {
     return ids.sort(false)
 }
+
+/*
+ * A CUSTOMER's own item code per variant (e.g. a retailer's per-size SKU on its purchase order), kept as a
+ * GoodIdentification whose type is a child of FTM_CUSTOMER_SKU (one type per customer, defined as data).
+ * Not switched: these codes are the customer's, recorded as printed. All rows are checked before any is written.
+ */
+def assignCustomerSkus() {
+    String styleId = parameters.productId
+    String typeId = parameters.goodIdentificationTypeId
+    if (from('GoodIdentificationType').where('goodIdentificationTypeId', typeId).queryOne()?.parentTypeId != 'FTM_CUSTOMER_SKU') {
+        return error("[${typeId}] is not a customer SKU type (its parent must be FTM_CUSTOMER_SKU)")
+    }
+    Map<String, String> skuBySize = parameters.skuBySizeFeatureId
+    Map variants = variantsOfColour(styleId, parameters.colorFeatureId as String)
+    List plan = []
+    List kept = []
+    for (Map.Entry<String, String> e in skuBySize.entrySet().sort { a, b -> a.key <=> b.key }) {
+        String vid = variants[e.key]
+        if (!vid) {
+            return error("Style [${styleId}] has no variant for colour [${parameters.colorFeatureId}] and size [${e.key}] - nothing written")
+        }
+        String code = (e.value as String).trim()
+        GenericValue have = from('GoodIdentification').where('goodIdentificationTypeId', typeId, 'productId', vid).queryOne()
+        if (have) {
+            if (have.idValue != code) {
+                return error("Variant [${vid}] already has [${have.idValue}] for ${typeId}; the input says [${code}] - nothing changed")
+            }
+            kept << vid
+            continue
+        }
+        GenericValue held = from('GoodIdentification').where('goodIdentificationTypeId', typeId, 'idValue', code).queryFirst()
+        if (held || plan.any { Map p -> p.code == code }) {
+            return error("${typeId} [${code}] is already on ${held ? 'product [' + held.productId + ']' : 'another size of this style'} - nothing written")
+        }
+        plan << [productId: vid, code: code]
+    }
+    plan.each { Map p ->
+        run service: 'createGoodIdentification', with: [goodIdentificationTypeId: typeId, productId: p.productId, idValue: p.code]
+    }
+    return success([assigned: plan, alreadyAssigned: kept])
+}
+
+/** sizeFeatureId -> variant productId, for the variants of a style that carry the given colour. */
+Map variantsOfColour(String styleId, String colourId) {
+    Map out = [:]
+    List<String> ids = EntityUtil.filterByDate(from('ProductAssoc')
+            .where('productId', styleId, 'productAssocTypeId', 'PRODUCT_VARIANT').queryList())*.productIdTo
+    for (String vid in ids) {
+        List feats = EntityUtil.filterByDate(from('ProductFeatureAndAppl')
+                .where('productId', vid, 'productFeatureApplTypeId', 'STANDARD_FEATURE').queryList())
+        if (feats.any { it.productFeatureTypeId == 'COLOR' && it.productFeatureId == colourId }) {
+            String size = feats.find { it.productFeatureTypeId == 'SIZE' }?.productFeatureId
+            if (size) {
+                out[size] = vid
+            }
+        }
+    }
+    return out
+}

@@ -22,4 +22,6 @@ under the License.
 <entity-engine-xml>
     <GoodIdentificationType goodIdentificationTypeId="FTM_SKU_DASHED" parentTypeId="SKU" hasTable="N"
         description="SKU, dashed form (alias of the canonical SKU)"/>
+    <GoodIdentificationType goodIdentificationTypeId="FTM_CUSTOMER_SKU" hasTable="N"
+        description="A customer's own item code (parent of one type per customer)"/>
 </entity-engine-xml>
