@@ -1,6 +1,9 @@
 package org.apache.ofbiz.ftm.garments
 
+import org.apache.ofbiz.base.util.UtilDateTime
 import org.apache.ofbiz.entity.GenericValue
+import org.apache.ofbiz.entity.condition.EntityCondition
+import org.apache.ofbiz.entity.condition.EntityOperator
 import org.apache.ofbiz.entity.util.EntityUtil
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -14,6 +17,22 @@ import java.math.RoundingMode
  * and the MERN enquiry ETL. Returns one row per (colour, size):
  *   [productId(variant, may be null if SKU absent), colorFeatureId, sizeFeatureId, quantity]
  */
+/** (colorFeatureId::sizeFeatureId) -> variant productId, over the style's current PRODUCT_VARIANT associations. */
+Map variantsByColorSize(String productId) {
+    List variantAssocs = EntityUtil.filterByDate(delegator.findByAnd("ProductAssoc",
+        [productId: productId, productAssocTypeId: "PRODUCT_VARIANT"], null, false))
+    Map variantByColorSize = [:]
+    for (GenericValue va in variantAssocs) {
+        String variantId = va.productIdTo
+        List feats = EntityUtil.filterByDate(delegator.findByAnd("ProductFeatureAndAppl",
+            [productId: variantId, productFeatureApplTypeId: "STANDARD_FEATURE"], null, false))
+        String c = feats.find { it.productFeatureTypeId == "COLOR" }?.productFeatureId
+        String s = feats.find { it.productFeatureTypeId == "SIZE" }?.productFeatureId
+        if (c && s) variantByColorSize[c + "::" + s] = variantId
+    }
+    return variantByColorSize
+}
+
 // No method parameter: OFBiz's GroovyEngine calls invokeMethod(name, EMPTY_ARGS), so a declared
 // `Map parameters` argument arrives as null and shadows the script binding that holds the IN map.
 def expandSizeCurveToVariants() {
@@ -44,17 +63,7 @@ def expandSizeCurveToVariants() {
     }
 
     // 3. map (colorFeatureId::sizeFeatureId) -> variant productId
-    List variantAssocs = EntityUtil.filterByDate(delegator.findByAnd("ProductAssoc",
-        [productId: productId, productAssocTypeId: "PRODUCT_VARIANT"], null, false))
-    Map variantByColorSize = [:]
-    for (GenericValue va in variantAssocs) {
-        String variantId = va.productIdTo
-        List feats = EntityUtil.filterByDate(delegator.findByAnd("ProductFeatureAndAppl",
-            [productId: variantId, productFeatureApplTypeId: "STANDARD_FEATURE"], null, false))
-        String c = feats.find { it.productFeatureTypeId == "COLOR" }?.productFeatureId
-        String s = feats.find { it.productFeatureTypeId == "SIZE" }?.productFeatureId
-        if (c && s) variantByColorSize[c + "::" + s] = variantId
-    }
+    Map variantByColorSize = variantsByColorSize(productId)
 
     // 4. expand each colour across the curve using largest-remainder rounding
     BigDecimal targetPerColor = qtyPerColor.setScale(0, RoundingMode.HALF_UP)
@@ -91,4 +100,72 @@ def expandSizeCurveToVariants() {
     }
 
     return success([variantQuantities: out, totalQuantity: grand])
+}
+
+/*
+ * PLAYBOOK_SKU S4 — create the garment variants of a virtual style: one variant Product per (colour x size on the
+ * curve), each with exactly one COLOR and one SIZE STANDARD_FEATURE and a PRODUCT_VARIANT association, through
+ * OFBiz's own quickAddVariant. Idempotent: a cell that already has its variant is left untouched (quickAddVariant
+ * would rewrite it). The style gets the colours and sizes as SELECTABLE features if it lacks them.
+ */
+def createVariantsFromSizeCurve() {
+    String productId = parameters.productId
+    GenericValue style = from('Product').where('productId', productId).queryOne()
+    if (!style || style.isVirtual != 'Y') {
+        return error("Product [${productId}] is not a virtual style")
+    }
+    List sizeIds = from('FtmSizeCurveItem').where('sizeCurveId', parameters.sizeCurveId).orderBy('sequenceNum').queryList()*.sizeFeatureId
+    if (!sizeIds) {
+        return error("Size curve [${parameters.sizeCurveId}] not found or has no items")
+    }
+    List colorIds = parameters.colorFeatureIds ?: EntityUtil.filterByDate(from('ProductFeatureAndAppl')
+            .where('productId', productId, 'productFeatureTypeId', 'COLOR', 'productFeatureApplTypeId', 'SELECTABLE_FEATURE')
+            .orderBy('sequenceNum').queryList())*.productFeatureId.unique()
+    if (!colorIds) {
+        return error("No colours for style [${productId}] - pass colorFeatureIds or add SELECTABLE COLOR features")
+    }
+    Map features = from('ProductFeature').where(EntityCondition.makeCondition('productFeatureId', EntityOperator.IN,
+            colorIds + sizeIds)).queryList().collectEntries { GenericValue f -> [(f.productFeatureId): f] }
+    List wrongType = colorIds.findAll { features[it]?.productFeatureTypeId != 'COLOR' } +
+            sizeIds.findAll { features[it]?.productFeatureTypeId != 'SIZE' }
+    if (wrongType) {
+        return error("Not a COLOR / SIZE feature (or unknown): ${wrongType}")
+    }
+
+    // the style shows the matrix: colours and sizes as SELECTABLE features
+    Set selectable = EntityUtil.filterByDate(from('ProductFeatureAppl')
+            .where('productId', productId, 'productFeatureApplTypeId', 'SELECTABLE_FEATURE').queryList())*.productFeatureId as Set
+    (colorIds + sizeIds).findAll { !(it in selectable) }.each { String fid ->
+        run service: 'applyFeatureToProduct', with: [productId: productId, productFeatureId: fid,
+                productFeatureApplTypeId: 'SELECTABLE_FEATURE', fromDate: UtilDateTime.nowTimestamp()]
+    }
+
+    Map existing = variantsByColorSize(productId)
+    List created = []
+    List kept = []
+    long seq = existing.size()
+    for (String c in colorIds) {
+        for (String s in sizeIds) {
+            String have = existing[c + '::' + s]
+            if (have) {
+                kept << have
+                continue
+            }
+            String variantId = variantIdFor(productId, features[c], features[s])
+            if (from('Product').where('productId', variantId).queryOne()) {
+                return error("Product [${variantId}] exists but is not the ${c} / ${s} variant of [${productId}] - refused")
+            }
+            Map res = run service: 'quickAddVariant', with: [productId: productId, productFeatureIds: c + '|' + s,
+                    productVariantId: variantId, sequenceNum: ++seq]
+            created << res.productVariantId
+        }
+    }
+    return success([createdVariantIds: created, existingVariantIds: kept, variantCount: created.size() + kept.size()])
+}
+
+/** <style>-<colour code>-<size code> from the features' abbrev/idCode; a sequenced id when that exceeds 20 characters. */
+String variantIdFor(String styleId, GenericValue color, GenericValue size) {
+    Closure<String> code = { GenericValue f -> (f.abbrev ?: f.idCode ?: f.productFeatureId) as String }
+    String id = "${styleId}-${code(color)}-${code(size)}".toUpperCase().replaceAll(/[^A-Z0-9_-]/, '')
+    return id.length() <= 20 ? id : delegator.getNextSeqId('Product')
 }

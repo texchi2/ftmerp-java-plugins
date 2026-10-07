@@ -79,6 +79,20 @@
         <attribute name="totalQuantity"     type="BigDecimal" mode="OUT" optional="true"/>
     </service>
 
+    <service name="createVariantsFromSizeCurve" engine="groovy"
+        location="component://ftm-garments/groovyScripts/ftm/garments/FtmSizeCurveServices.groovy"
+        invoke="createVariantsFromSizeCurve" auth="true">
+        <description>PLAYBOOK_SKU S4: create the variant Products of a virtual style, one per colour x size on the curve,
+            each with exactly one COLOR and one SIZE standard feature (via quickAddVariant). Idempotent; an existing
+            product that blocks a variant id is refused, never overwritten.</description>
+        <attribute name="productId"          type="String"  mode="IN"  optional="false"/>
+        <attribute name="sizeCurveId"        type="String"  mode="IN"  optional="false"/>
+        <attribute name="colorFeatureIds"    type="List"    mode="IN"  optional="true"/>
+        <attribute name="createdVariantIds"  type="List"    mode="OUT" optional="false"/>
+        <attribute name="existingVariantIds" type="List"    mode="OUT" optional="false"/>
+        <attribute name="variantCount"       type="Integer" mode="OUT" optional="false"/>
+    </service>
+
     <!-- ===== SKU generator (PLAYBOOK_SKU S2) ===== -->
     <service name="generateTrimSku" engine="groovy"
         location="component://ftm-garments/groovyScripts/ftm/garments/FtmSkuServices.groovy"

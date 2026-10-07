@@ -32,6 +32,12 @@ under the License.
     <test-case case-name="neith-style-matrix-demo-present">
         <entity-xml action="assert" entity-xml-url="component://ftm-garments/data/NeithStyleMatrixDemoData.xml"/>
     </test-case>
+    <test-case case-name="load-style-variant-test-data">
+        <entity-xml action="load" entity-xml-url="component://ftm-garments/testdef/data/FtmStyleVariantTestData.xml"/>
+    </test-case>
+    <test-case case-name="style-variant-tests">
+        <junit-test-suite class-name="org.apache.ofbiz.ftm.garments.test.StyleVariantTests"/>
+    </test-case>
     <test-case case-name="size-curve-tests">
         <junit-test-suite class-name="org.apache.ofbiz.ftm.garments.test.SizeCurveTests"/>
     </test-case>

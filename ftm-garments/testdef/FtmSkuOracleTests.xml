@@ -25,6 +25,9 @@ under the License.
     <test-case case-name="sku-seed-counts">
         <junit-test-suite class-name="org.apache.ofbiz.ftm.garments.test.SkuSeedTests"/>
     </test-case>
+    <test-case case-name="real-style-variants">
+        <junit-test-suite class-name="org.apache.ofbiz.ftm.garments.test.RealStyleVariantTests"/>
+    </test-case>
     <test-case case-name="sku-workbook-oracle">
         <junit-test-suite class-name="org.apache.ofbiz.ftm.garments.test.SkuOracleTests"/>
     </test-case>
