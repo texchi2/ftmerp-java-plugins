@@ -32,6 +32,26 @@
         </section>
     </screen>
 
+    <!-- SKU generator entry screen (PLAYBOOK_SKU S7) -->
+    <screen name="SkuGenerator">
+        <section>
+            <actions>
+                <script location="component://ftm-garments/groovyScripts/ftm/garments/SkuGeneratorPrep.groovy"/>
+            </actions>
+            <widgets>
+                <decorator-screen name="main-decorator" location="${parameters.mainDecoratorLocation}">
+                    <decorator-section name="body">
+                        <screenlet title="SKU Generator">
+                            <platform-specific>
+                                <html><html-template location="component://ftm-garments/template/SkuGenerator.ftl"/></html>
+                            </platform-specific>
+                        </screenlet>
+                    </decorator-section>
+                </decorator-screen>
+            </widgets>
+        </section>
+    </screen>
+
     <screen name="CreateStyle">
         <section>
             <widgets>

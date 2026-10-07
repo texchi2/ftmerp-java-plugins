@@ -26,6 +26,7 @@ import org.apache.ofbiz.entity.condition.EntityCondition
 import org.apache.ofbiz.entity.condition.EntityOperator
 import org.apache.ofbiz.ftm.garments.sku.SkuComposer
 import org.apache.ofbiz.ftm.garments.sku.SkuRefusedException
+import org.apache.ofbiz.service.ServiceUtil
 
 /*
  * SKU generator services (PLAYBOOK_SKU S2). The rule lives in FtmSkuRule / FtmSkuRuleSegment and the lookup
@@ -146,4 +147,60 @@ def findProductBySku() {
     String canonical = SkuComposer.canonical(parameters.skuCode as String)
     GenericValue gi = from('GoodIdentification').where('goodIdentificationTypeId', 'SKU', 'idValue', canonical).queryFirst()
     return success([productId: gi?.productId])
+}
+
+/*
+ * PLAYBOOK_SKU S7 - one-time import of codes that already exist (the owner's workbooks). Every row ends in EXACTLY ONE
+ * bucket, and the buckets add up to the rows given (0 silent):
+ *   loaded            the rule reproduces the workbook's code -> createTrimProduct created it
+ *   alreadyPresent    the rule reproduces the code and the item already exists (same attributes)
+ *   refusedAsWorkbook the workbook has no code for the row and the rule refuses it too
+ *   disagreeing       anything else - listed with both codes and the reason; NOTHING is created for it
+ * Rows: [ref, skuRuleId, values, workbookCode]. Each creation runs in its own transaction.
+ */
+def importSkuRows() {
+    List rows = parameters.rows ?: []
+    List loaded = []
+    List already = []
+    List refusedAsWorkbook = []
+    List disagreeing = []
+    for (Map row in rows) {
+        Map gen = dispatcher.runSync('generateTrimSku', [skuRuleId: row.skuRuleId, values: row.values])
+        if (ServiceUtil.isError(gen)) {
+            if (!row.workbookCode) {
+                refusedAsWorkbook << [ref: row.ref]
+            } else {
+                disagreeing << [ref: row.ref, workbookCode: row.workbookCode, ruleCode: null, reason: ServiceUtil.getErrorMessage(gen)]
+            }
+            continue
+        }
+        if (!row.workbookCode) {
+            disagreeing << [ref: row.ref, workbookCode: null, ruleCode: gen.skuCode, reason: 'the rule gives a code where the workbook has none']
+            continue
+        }
+        if (gen.skuCode != row.workbookCode) {
+            disagreeing << [ref: row.ref, workbookCode: row.workbookCode, ruleCode: gen.skuCode, reason: 'codes differ']
+            continue
+        }
+        if (!gen.lengthValid) {
+            disagreeing << [ref: row.ref, workbookCode: row.workbookCode, ruleCode: gen.skuCode,
+                            reason: "the code has ${(gen.canonicalCode as String).length()} characters - the rule requires its codeLength"]
+            continue
+        }
+        Map made = dispatcher.runSync('createTrimProduct', [skuRuleId: row.skuRuleId, values: row.values,
+                productName: row.productName ?: gen.canonicalCode, userLogin: parameters.userLogin], 0, true)
+        if (ServiceUtil.isError(made)) {
+            disagreeing << [ref: row.ref, workbookCode: row.workbookCode, ruleCode: gen.skuCode, reason: ServiceUtil.getErrorMessage(made)]
+        } else if (made.created) {
+            loaded << [ref: row.ref, productId: made.productId, sku: made.canonicalCode]
+        } else {
+            already << [ref: row.ref, productId: made.productId, sku: made.canonicalCode]
+        }
+    }
+    int accounted = loaded.size() + already.size() + refusedAsWorkbook.size() + disagreeing.size()
+    if (accounted != rows.size()) {
+        return error("Import accounting broken: ${rows.size()} rows, ${accounted} accounted")
+    }
+    return success([loaded: loaded, alreadyPresent: already, refusedAsWorkbook: refusedAsWorkbook, disagreeing: disagreeing,
+                    rowCount: rows.size()])
 }

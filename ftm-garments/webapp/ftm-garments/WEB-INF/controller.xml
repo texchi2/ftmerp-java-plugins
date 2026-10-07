@@ -12,6 +12,17 @@
         <response name="success" type="view" value="FindStyles"/>
     </request-map>
 
+    <request-map uri="SkuGenerator">
+        <security https="false" auth="true"/>
+        <response name="success" type="view" value="SkuGenerator"/>
+    </request-map>
+    <request-map uri="SkuGenerate">
+        <security https="false" auth="true"/>
+        <event type="groovy" path="component://ftm-garments/groovyScripts/ftm/garments/SkuGeneratorEvents.groovy" invoke="generate"/>
+        <response name="success" type="view" value="SkuGenerator"/>
+        <response name="error" type="view" value="SkuGenerator"/>
+    </request-map>
+
     <request-map uri="FindStyles">
         <security https="false" auth="true"/>
         <response name="success" type="view" value="FindStyles"/>
@@ -49,6 +60,7 @@
     <view-map name="main" type="screen"
         page="component://ftm-garments/widget/FtmGarmentsScreens.xml#FindStyles"/>
 
+    <view-map name="SkuGenerator" type="screen" page="component://ftm-garments/widget/FtmGarmentsScreens.xml#SkuGenerator"/>
     <view-map name="FindStyles" type="screen"
         page="component://ftm-garments/widget/FtmGarmentsScreens.xml#FindStyles"/>
 

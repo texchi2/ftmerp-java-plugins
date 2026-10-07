@@ -13,6 +13,9 @@
         <menu-item name="FindStyles" title="Style Numbers">
             <link target="FindStyles"/>
         </menu-item>
+        <menu-item name="SkuGenerator" title="SKU Generator">
+            <link target="SkuGenerator"/>
+        </menu-item>
     </menu>
 
 </menus>

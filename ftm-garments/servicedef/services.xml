@@ -96,7 +96,7 @@
     <!-- ===== SKU generator (PLAYBOOK_SKU S2) ===== -->
     <service name="generateTrimSku" engine="groovy"
         location="component://ftm-garments/groovyScripts/ftm/garments/FtmSkuServices.groovy"
-        invoke="generateTrimSku" auth="false">
+        invoke="generateTrimSku" auth="false" use-transaction="false">
         <description>Pure: compute the SKU code of an item from its attribute values (by segment inputName) and/or
             chosen ProductFeature ids. Refuses when a FEATURE value has no matching feature or an input is missing.
             Writes nothing.</description>
@@ -179,6 +179,21 @@
         <attribute name="requireResolved"        type="Boolean"    mode="IN"  optional="true"/>
         <attribute name="components"             type="List"       mode="OUT" optional="false"/>
         <attribute name="unresolvedComponentIds" type="List"       mode="OUT" optional="false"/>
+    </service>
+
+    <service name="importSkuRows" engine="groovy"
+        location="component://ftm-garments/groovyScripts/ftm/garments/FtmSkuServices.groovy"
+        invoke="importSkuRows" auth="true" use-transaction="false">
+        <description>PLAYBOOK_SKU S7: one-time import of existing codes. Each row [ref, skuRuleId, values, workbookCode,
+            productName?] ends in exactly one of loaded / alreadyPresent / refusedAsWorkbook / disagreeing (listed, nothing
+            created); the counts add up to the rows given. Each creation runs in its own transaction (generateTrimSku is
+            pure and runs without one, so its refusals cannot mark anything rollback-only).</description>
+        <attribute name="rows"              type="List"    mode="IN"  optional="false"/>
+        <attribute name="loaded"            type="List"    mode="OUT" optional="false"/>
+        <attribute name="alreadyPresent"    type="List"    mode="OUT" optional="false"/>
+        <attribute name="refusedAsWorkbook" type="List"    mode="OUT" optional="false"/>
+        <attribute name="disagreeing"       type="List"    mode="OUT" optional="false"/>
+        <attribute name="rowCount"          type="Integer" mode="OUT" optional="false"/>
     </service>
 
     <service name="findProductBySku" engine="groovy"
