@@ -14,7 +14,9 @@ import java.math.RoundingMode
  * and the MERN enquiry ETL. Returns one row per (colour, size):
  *   [productId(variant, may be null if SKU absent), colorFeatureId, sizeFeatureId, quantity]
  */
-def expandSizeCurveToVariants(Map parameters) {
+// No method parameter: OFBiz's GroovyEngine calls invokeMethod(name, EMPTY_ARGS), so a declared
+// `Map parameters` argument arrives as null and shadows the script binding that holds the IN map.
+def expandSizeCurveToVariants() {
     String productId = parameters.productId
     String sizeCurveId = parameters.sizeCurveId
     BigDecimal qtyPerColor = parameters.quantityPerColor as BigDecimal
