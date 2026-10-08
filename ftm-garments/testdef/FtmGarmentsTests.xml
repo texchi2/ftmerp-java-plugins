@@ -41,4 +41,7 @@ under the License.
     <test-case case-name="size-curve-tests">
         <junit-test-suite class-name="org.apache.ofbiz.ftm.garments.test.SizeCurveTests"/>
     </test-case>
+    <test-case case-name="style-number-crud">
+        <junit-test-suite class-name="org.apache.ofbiz.ftm.garments.test.StyleNumberCrudTests"/>
+    </test-case>
 </test-suite>

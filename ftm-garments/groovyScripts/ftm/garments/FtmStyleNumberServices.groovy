@@ -1,16 +1,14 @@
 package org.apache.ofbiz.ftm.garments
 
-import org.apache.ofbiz.entity.util.EntityUtil
-import org.apache.ofbiz.entity.GenericValue
-import org.apache.ofbiz.entity.condition.EntityCondition
-import org.apache.ofbiz.entity.condition.EntityOperator
+// No method parameter: OFBiz's GroovyEngine calls invokeMethod(name, EMPTY_ARGS), so a declared `Map parameters`
+// argument arrives as null and shadows the script binding that holds the IN map (bug-1769).
+// Each service returns only the OUT values its services.xml entry declares.
 
-def getFtmStyle(Map parameters) {
-    def styleValue = delegator.findOne("FtmStyleNumber", EntityCondition.makeCondition("styleNumberId", EntityOperator.EQUALS, parameters.styleNumberId), true)
+def getFtmStyle() {
+    def styleValue = delegator.findOne("FtmStyleNumber", [styleNumberId: parameters.styleNumberId], true)
     if (!styleValue) return error("Style Number not found")
 
     return success([
-        styleNumberId: styleValue.styleNumberId,
         styleNumber: styleValue.styleNumber,
         buyer: styleValue.buyer,
         description: styleValue.description,
@@ -21,8 +19,8 @@ def getFtmStyle(Map parameters) {
     ])
 }
 
-def createFtmStyleNumber(Map parameters) {
-    def styleNumberId = org.apache.ofbiz.entity.util.EntitySeq.getNextSeqId("FtmStyleNumberSeq", delegator)
+def createFtmStyleNumber() {
+    def styleNumberId = delegator.getNextSeqId("FtmStyleNumber")
     def styleMap = [
         styleNumberId: styleNumberId,
         styleNumber: parameters.styleNumber,
@@ -33,12 +31,13 @@ def createFtmStyleNumber(Map parameters) {
         season: parameters.season,
         status: parameters.status
     ]
-    delegator.create(styleMap)
+    delegator.create("FtmStyleNumber", styleMap)
     return success([styleNumberId: styleNumberId])
 }
 
-def updateFtmStyleNumber(Map parameters) {
-    def styleValue = delegator.findOne("FtmStyleNumber", EntityCondition.makeCondition("styleNumberId", EntityOperator.EQUALS, parameters.styleNumberId), true)
+def updateFtmStyleNumber() {
+    // not from the cache: a cached value cannot be modified
+    def styleValue = delegator.findOne("FtmStyleNumber", [styleNumberId: parameters.styleNumberId], false)
     if (!styleValue) return error("Style Number not found")
 
     def updateMap = [:]
@@ -51,16 +50,16 @@ def updateFtmStyleNumber(Map parameters) {
     if (parameters.status) updateMap.status = parameters.status
 
     if (updateMap) {
-        styleValue.set(updateMap)
+        styleValue.setNonPKFields(updateMap)
         delegator.store(styleValue)
     }
-    return success([styleNumberId: parameters.styleNumberId])
+    return success()
 }
 
-def deleteFtmStyleNumber(Map parameters) {
-    def styleValue = delegator.findOne("FtmStyleNumber", EntityCondition.makeCondition("styleNumberId", EntityOperator.EQUALS, parameters.styleNumberId), true)
+def deleteFtmStyleNumber() {
+    def styleValue = delegator.findOne("FtmStyleNumber", [styleNumberId: parameters.styleNumberId], false)
     if (!styleValue) return error("Style Number not found")
 
-    delegator.delete(styleValue)
-    return success([styleNumberId: parameters.styleNumberId])
+    delegator.removeValue(styleValue)
+    return success()
 }
