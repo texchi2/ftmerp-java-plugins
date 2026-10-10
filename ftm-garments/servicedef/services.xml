@@ -186,9 +186,13 @@
         invoke="importSkuRows" auth="true" use-transaction="false">
         <description>PLAYBOOK_SKU S7: one-time import of existing codes. Each row [ref, skuRuleId, values, workbookCode,
             productName?] ends in exactly one of loaded / alreadyPresent / refusedAsWorkbook / disagreeing (listed, nothing
-            created); the counts add up to the rows given. Each creation runs in its own transaction (generateTrimSku is
-            pure and runs without one, so its refusals cannot mark anything rollback-only).</description>
+            created); the counts add up to the rows given. Each creation runs in its own transaction. Codes are composed by
+            a direct call (no nested service), so an expected refusal never marks a transaction rollback-only. dryRun = the same
+            classification, nothing written. expectCounts (loaded, alreadyPresent, refusedAsWorkbook, disagreeing) = the
+            whole import in ONE transaction, committed only if every count matches.</description>
         <attribute name="rows"              type="List"    mode="IN"  optional="false"/>
+        <attribute name="dryRun"            type="Boolean" mode="INOUT" optional="true"/>
+        <attribute name="expectCounts"      type="Map"     mode="IN"  optional="true"/>
         <attribute name="loaded"            type="List"    mode="OUT" optional="false"/>
         <attribute name="alreadyPresent"    type="List"    mode="OUT" optional="false"/>
         <attribute name="refusedAsWorkbook" type="List"    mode="OUT" optional="false"/>
