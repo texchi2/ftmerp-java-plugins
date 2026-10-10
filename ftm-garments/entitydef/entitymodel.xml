@@ -15,7 +15,7 @@
         <field name="productType"      type="short-varchar"/>
         <field name="productCategory"  type="short-varchar"/>
         <field name="season"           type="short-varchar"/>
-        <field name="status" type="short-varchar" col-name="style_status"/>
+        <field name="status" type="short-varchar" col-name="STYLE_STATUS"/>
         <field name="productId"        type="id"/>
         <field name="createdDate"      type="date-time"/>
         <field name="lastModifiedDate" type="date-time"/>
