@@ -18,5 +18,5 @@ under the License.
 <!-- SKU workbook import: the grant of FTM_GARMENTS_IMPORT to FULLADMIN (a demo-data group, so this is demo-reader data;
      the permission itself is seed, FtmSkuImportSeedData.xml). On ofbiz-dev it is loaded in the deploy window. -->
 <entity-engine-xml>
-    <SecurityGroupPermission groupId="FULLADMIN" permissionId="FTM_GARMENTS_IMPORT" fromDate="2026-10-22 00:00:00"/>
+    <SecurityGroupPermission groupId="FULLADMIN" permissionId="FTM_GARMENTS_IMPORT" fromDate="2026-10-01 00:00:00"/>
 </entity-engine-xml>

@@ -32,7 +32,7 @@ under the License.
 
     <!-- the test runner's login (system) sits in the seed group SUPER: grant the import permission there, for the tests only
          (the test database holds seed data only - no FULLADMIN) -->
-    <SecurityGroupPermission groupId="SUPER" permissionId="FTM_GARMENTS_IMPORT" fromDate="2026-10-22 00:00:00"/>
+    <SecurityGroupPermission groupId="SUPER" permissionId="FTM_GARMENTS_IMPORT" fromDate="2026-10-01 00:00:00"/>
 
     <!-- a login in no security group: both import services must refuse it -->
     <UserLogin userLoginId="skuimport-nobody" currentPassword="{SHA}47b56994cbc2b6d10aa1be30f70165adb305a41a" enabled="Y" requirePasswordChange="N"/>
