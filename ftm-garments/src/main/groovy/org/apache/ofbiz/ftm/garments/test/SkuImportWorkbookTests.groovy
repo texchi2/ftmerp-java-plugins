@@ -34,14 +34,16 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook
  * SKU workbook import on the SYNTHETIC rule TEST_SKU and the synthetic sheet map (FtmSkuImportTestData.xml), with
  * workbooks built here by POI (DESIGN_sku_workbook_import_2026-10-22 §7, gate G1).
  *
- * Every assertion was watched going red on a deliberate break before it was trusted:
- *  - exactly-one-bucket: dropping the ITEM_REFUSED branch in classifyItems leaves a row unaccounted (the kind sum fails);
- *  - shuffled columns: resolving a column by its index instead of its header gives another fingerprint;
- *  - missing header: removing the HEADER_MISSING row lets the commit proceed;
- *  - stale preview: skipping the re-classification in commitSkuWorkbookImport applies a row the master already holds;
- *  - rollback: removing TransactionUtil (use-transaction) keeps the first row after the injected fault;
- *  - audit: a change row stored without appliedBy fails the who/when check;
- *  - permission: removing required-permissions from the service lets skuimport-nobody preview.
+ * Every case was watched going red on a deliberate break of the code under test before it was trusted: two rounds on the
+ * rpitex working tree on 2026-10-22 (logs sku-lane/logs/import-mutants.log and import-mutants2.log), each break reverted
+ * with git checkout afterwards.
+ *  - round 1, exactly these seven red (153 tests, 7 errors): a column read by its index (shuffled columns); the
+ *    stale-fingerprint check disabled (stale preview); use-transaction="false" on the commit (rollback); required-permissions
+ *    removed from the preview service (permission); the refused-as-workbook rows dropped (every kind in one bucket);
+ *    appliedBy nulled (audit); HEADER_MISSING downgraded to WARNING (missing header);
+ *  - round 2, the other four red (153 tests, 5 errors): the ticks ignored (tick-only, and the audit case as a side effect);
+ *    canMint() always true (non-numeric mint); VOCAB_DUPLICATE_KEY downgraded to WARNING (duplicate key); the cap raised to
+ *    8 GB (size cap).
  */
 class SkuImportWorkbookTests extends OFBizTestCase {
 
