@@ -16,11 +16,12 @@ specific language governing permissions and limitations
 under the License.
 -->
 <!-- SKU workbook import (DESIGN_sku_workbook_import_2026-10-22): the permission every import screen and service
-     requires, and the import's status items. The permission is granted to FULLADMIN only; any other group gets it
-     by the owner's word. The sheet map for the owner's workbooks is PRIVATE data and is not in this repository. -->
+     requires, and the import's status items. SEED only - no group holds the permission here: the grant to FULLADMIN
+     is demo-reader data (FtmSkuImportDemoData.xml), because FULLADMIN itself is demo data and a seed-only database
+     (the test database) has no such group (FK SEC_GRP_PERM_GRP). Any other group gets it by the owner's word.
+     The sheet map for the owner's workbooks is PRIVATE data and is not in this repository. -->
 <entity-engine-xml>
     <SecurityPermission permissionId="FTM_GARMENTS_IMPORT" description="FTM Garments: preview and commit a SKU workbook import"/>
-    <SecurityGroupPermission groupId="FULLADMIN" permissionId="FTM_GARMENTS_IMPORT" fromDate="2026-10-22 00:00:00"/>
 
     <StatusType statusTypeId="FTM_SKU_IMPORT" description="FTM SKU workbook import"/>
     <StatusItem statusId="FTMSKU_PREVIEWED"  statusTypeId="FTM_SKU_IMPORT" statusCode="PREVIEWED"   sequenceId="01" description="Previewed, awaiting the ruling"/>
