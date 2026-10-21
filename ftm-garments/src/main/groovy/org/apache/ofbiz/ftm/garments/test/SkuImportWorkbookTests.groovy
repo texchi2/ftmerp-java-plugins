@@ -52,98 +52,6 @@ class SkuImportWorkbookTests extends OFBizTestCase {
         super(name)
     }
 
-    // ---- helpers -------------------------------------------------------------------------------------------------
-
-    /** An .xlsx with one sheet per entry: name -> rows (row 0 = headers); null cells are left empty. */
-    private static byte[] workbook(Map<String, List<List<Object>>> sheets) {
-        ByteArrayOutputStream out = new ByteArrayOutputStream()
-        new XSSFWorkbook().withCloseable { XSSFWorkbook wb ->
-            sheets.each { String name, List<List<Object>> rows ->
-                Sheet sheet = wb.createSheet(name)
-                rows.eachWithIndex { List<Object> values, int r ->
-                    Row row = sheet.createRow(r)
-                    values.eachWithIndex { Object v, int c ->
-                        if (v != null) {
-                            Cell cell = row.createCell(c)
-                            if (v instanceof Number) {
-                                cell.setCellValue((v as Number).doubleValue())
-                            } else {
-                                cell.setCellValue(v as String)
-                            }
-                        }
-                    }
-                }
-            }
-            wb.write(out)
-        }
-        return out.toByteArray()
-    }
-
-    /** The same rows with their columns in another order (header row included), so only the header text can find them. */
-    private static List<List<Object>> shuffled(List<List<Object>> rows, List<Integer> order) {
-        return rows.collect { List<Object> r -> order.collect { int i -> i < r.size() ? r[i] : null } }
-    }
-
-    /** The happy workbook: every kind once, no error. */
-    private static Map<String, List<List<Object>>> happySheets() {
-        return [
-            'Test Colours': [['Colour', 'Code', 'Note'], ['Black', 'BK', 'same'], ['White', 'WX', 'code differs'], ['black', 'BK', 'repeat']],
-            'Test Sizes':   [['Size'], ['Small'], ['Large'], ['Medium']],
-            'Test Items':   [['Colour', 'Name', 'Seq', 'SKU'], ['Black', 'abc', '0801', 'TBK-ABC0801'], ['Black', 'abc', '0801', 'TBK-ABC0801'],
-                             ['Black', 'abc', '0802', 'TBK-ABC9999'], ['Purple', 'abc', '0803', null]],
-            'Scratch':      [['Anything'], ['at all']],
-        ]
-    }
-
-    /** The happy sheets with values only this case commits ('Grand', item 0901), so the other cases keep their expectations whatever the order. */
-    private static Map<String, List<List<Object>>> commitSheets() {
-        return [
-            'Test Colours': [['Colour', 'Code', 'Note'], ['White', 'WX', 'code differs']],
-            'Test Sizes':   [['Size'], ['Grand']],
-            'Test Items':   [['Colour', 'Name', 'Seq', 'SKU'], ['Black', 'abc', '0901', 'TBK-ABC0901']],
-        ]
-    }
-
-    private Map preview(byte[] bytes, GenericValue login = userLogin) {
-        return dispatcher.runSync('previewSkuWorkbook', [uploadedFile: ByteBuffer.wrap(bytes), fileName: 'test.xlsx', userLogin: login])
-    }
-
-    private Map commit(String skuImportId, String fingerprint, List<String> seqs, Map extra = [:]) {
-        try {
-            return dispatcher.runSync('commitSkuWorkbookImport', [skuImportId: skuImportId, fingerprint: fingerprint, applyChangeSeqs: seqs,
-                                                                   userLogin: userLogin] + extra)
-        } catch (GenericServiceException e) {
-            return ServiceUtil.returnError(e.message)
-        }
-    }
-
-    private List<GenericValue> changes(String skuImportId) {
-        return EntityQuery.use(delegator).from('FtmSkuImportChange').where('skuImportId', skuImportId).orderBy('changeSeq').queryList()
-    }
-
-    private Map<String, Integer> kinds(List<GenericValue> rows) {
-        return rows.countBy { GenericValue c -> c.kindId as String }
-    }
-
-    private List<String> seqsOf(List<GenericValue> rows, Closure<Boolean> pick) {
-        return rows.findAll(pick).collect { GenericValue c -> (c.changeSeq as Long).toString() }
-    }
-
-    private Map<String, Long> counts() {
-        return COUNTED.collectEntries { String e -> [(e): EntityQuery.use(delegator).from(e).queryCount()] }
-    }
-
-    private GenericValue feature(String typeId, String description) {
-        return EntityQuery.use(delegator).from('ProductFeature').where('productFeatureTypeId', typeId).queryList()
-                .find { GenericValue f -> description.equalsIgnoreCase(f.description as String) }
-    }
-
-    private String nextSizeCode() {
-        List<Integer> codes = EntityQuery.use(delegator).from('ProductFeature').where('productFeatureTypeId', 'SKU_TEST_SIZE').queryList()
-                *.idCode.collect { Object c -> (c as String).toInteger() }
-        return String.valueOf(codes.max() + 1).padLeft(2, '0')
-    }
-
     // ---- tests ---------------------------------------------------------------------------------------------------
 
     void testEveryKindLandsInExactlyOneBucketAndNothingIsWritten() {
@@ -339,6 +247,98 @@ class SkuImportWorkbookTests extends OFBizTestCase {
         Map junk = preview('not a workbook'.bytes)
         assert ServiceUtil.isError(junk) && ServiceUtil.getErrorMessage(junk).startsWith('Cannot read the workbook')
         assert counts() == before
+    }
+
+    // ---- helpers -------------------------------------------------------------------------------------------------
+
+    /** An .xlsx with one sheet per entry: name -> rows (row 0 = headers); null cells are left empty. */
+    private static byte[] workbook(Map<String, List<List<Object>>> sheets) {
+        ByteArrayOutputStream out = new ByteArrayOutputStream()
+        new XSSFWorkbook().withCloseable { XSSFWorkbook wb ->
+            sheets.each { String name, List<List<Object>> rows ->
+                Sheet sheet = wb.createSheet(name)
+                rows.eachWithIndex { List<Object> values, int r ->
+                    Row row = sheet.createRow(r)
+                    values.eachWithIndex { Object v, int c ->
+                        if (v != null) {
+                            Cell cell = row.createCell(c)
+                            if (v instanceof Number) {
+                                cell.setCellValue((v as Number).doubleValue())
+                            } else {
+                                cell.setCellValue(v as String)
+                            }
+                        }
+                    }
+                }
+            }
+            wb.write(out)
+        }
+        return out.toByteArray()
+    }
+
+    /** The same rows with their columns in another order (header row included), so only the header text can find them. */
+    private static List<List<Object>> shuffled(List<List<Object>> rows, List<Integer> order) {
+        return rows.collect { List<Object> r -> order.collect { int i -> i < r.size() ? r[i] : null } }
+    }
+
+    /** The happy workbook: every kind once, no error. */
+    private static Map<String, List<List<Object>>> happySheets() {
+        return [
+            'Test Colours': [['Colour', 'Code', 'Note'], ['Black', 'BK', 'same'], ['White', 'WX', 'code differs'], ['black', 'BK', 'repeat']],
+            'Test Sizes':   [['Size'], ['Small'], ['Large'], ['Medium']],
+            'Test Items':   [['Colour', 'Name', 'Seq', 'SKU'], ['Black', 'abc', '0801', 'TBK-ABC0801'], ['Black', 'abc', '0801', 'TBK-ABC0801'],
+                             ['Black', 'abc', '0802', 'TBK-ABC9999'], ['Purple', 'abc', '0803', null]],
+            'Scratch':      [['Anything'], ['at all']],
+        ]
+    }
+
+    /** The happy sheets with values only this case commits ('Grand', item 0901), so the other cases keep their expectations whatever the order. */
+    private static Map<String, List<List<Object>>> commitSheets() {
+        return [
+            'Test Colours': [['Colour', 'Code', 'Note'], ['White', 'WX', 'code differs']],
+            'Test Sizes':   [['Size'], ['Grand']],
+            'Test Items':   [['Colour', 'Name', 'Seq', 'SKU'], ['Black', 'abc', '0901', 'TBK-ABC0901']],
+        ]
+    }
+
+    private Map preview(byte[] bytes, GenericValue login = userLogin) {
+        return dispatcher.runSync('previewSkuWorkbook', [uploadedFile: ByteBuffer.wrap(bytes), fileName: 'test.xlsx', userLogin: login])
+    }
+
+    private Map commit(String skuImportId, String fingerprint, List<String> seqs, Map extra = [:]) {
+        try {
+            return dispatcher.runSync('commitSkuWorkbookImport', [skuImportId: skuImportId, fingerprint: fingerprint, applyChangeSeqs: seqs,
+                                                                   userLogin: userLogin] + extra)
+        } catch (GenericServiceException e) {
+            return ServiceUtil.returnError(e.message)
+        }
+    }
+
+    private List<GenericValue> changes(String skuImportId) {
+        return EntityQuery.use(delegator).from('FtmSkuImportChange').where('skuImportId', skuImportId).orderBy('changeSeq').queryList()
+    }
+
+    private Map<String, Integer> kinds(List<GenericValue> rows) {
+        return rows.countBy { GenericValue c -> c.kindId as String }
+    }
+
+    private List<String> seqsOf(List<GenericValue> rows, Closure<Boolean> pick) {
+        return rows.findAll(pick).collect { GenericValue c -> (c.changeSeq as Long).toString() }
+    }
+
+    private Map<String, Long> counts() {
+        return COUNTED.collectEntries { String e -> [(e): EntityQuery.use(delegator).from(e).queryCount()] }
+    }
+
+    private GenericValue feature(String typeId, String description) {
+        return EntityQuery.use(delegator).from('ProductFeature').where('productFeatureTypeId', typeId).queryList()
+                .find { GenericValue f -> description.equalsIgnoreCase(f.description as String) }
+    }
+
+    private String nextSizeCode() {
+        List<Integer> codes = EntityQuery.use(delegator).from('ProductFeature').where('productFeatureTypeId', 'SKU_TEST_SIZE').queryList()
+                *.idCode.collect { Object c -> (c as String).toInteger() }
+        return String.valueOf(codes.max() + 1).padLeft(2, '0')
     }
 
 }

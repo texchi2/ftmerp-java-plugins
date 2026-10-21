@@ -100,17 +100,15 @@ final class WorkbookReader implements Closeable {
             Row row = sheet.getRow(r)
             Map<String, String> written = row == null ? [:] : headersOf(row)
             if (written.keySet().containsAll(wanted)) {
-                Map<String, Integer> columns = [:]
-                for (Cell cell : row) {
-                    String key = normalise(cellText(cell))
-                    if (key && !columns.containsKey(key)) {
-                        columns[key] = cell.columnIndex
-                    }
-                }
-                return new SheetTable(this, sheet, r, columns, written)
+                return new SheetTable(this, sheet, r, columnsOf(row), written)
             }
         }
         return null
+    }
+
+    @Override
+    void close() {
+        workbook.close()
     }
 
     /** A row's non-blank cells as normalised header -> header as written; the first cell carrying a header wins. */
@@ -126,9 +124,16 @@ final class WorkbookReader implements Closeable {
         return written
     }
 
-    @Override
-    void close() {
-        workbook.close()
+    /** A row's non-blank cells as normalised header -> column index; the first cell carrying a header wins. */
+    private Map<String, Integer> columnsOf(Row row) {
+        Map<String, Integer> columns = [:]
+        for (Cell cell : row) {
+            String key = normalise(cellText(cell))
+            if (key && !columns.containsKey(key)) {
+                columns[key] = cell.columnIndex
+            }
+        }
+        return columns
     }
 
 }
