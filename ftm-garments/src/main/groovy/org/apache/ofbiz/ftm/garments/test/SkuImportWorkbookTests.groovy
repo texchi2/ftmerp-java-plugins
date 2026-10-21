@@ -55,7 +55,7 @@ class SkuImportWorkbookTests extends OFBizTestCase {
     // ---- helpers -------------------------------------------------------------------------------------------------
 
     /** An .xlsx with one sheet per entry: name -> rows (row 0 = headers); null cells are left empty. */
-    static byte[] workbook(Map<String, List<List<Object>>> sheets) {
+    private static byte[] workbook(Map<String, List<List<Object>>> sheets) {
         ByteArrayOutputStream out = new ByteArrayOutputStream()
         new XSSFWorkbook().withCloseable { XSSFWorkbook wb ->
             sheets.each { String name, List<List<Object>> rows ->
@@ -80,12 +80,12 @@ class SkuImportWorkbookTests extends OFBizTestCase {
     }
 
     /** The same rows with their columns in another order (header row included), so only the header text can find them. */
-    static List<List<Object>> shuffled(List<List<Object>> rows, List<Integer> order) {
+    private static List<List<Object>> shuffled(List<List<Object>> rows, List<Integer> order) {
         return rows.collect { List<Object> r -> order.collect { int i -> i < r.size() ? r[i] : null } }
     }
 
     /** The happy workbook: every kind once, no error. */
-    static Map<String, List<List<Object>>> happySheets() {
+    private static Map<String, List<List<Object>>> happySheets() {
         return [
             'Test Colours': [['Colour', 'Code', 'Note'], ['Black', 'BK', 'same'], ['White', 'WX', 'code differs'], ['black', 'BK', 'repeat']],
             'Test Sizes':   [['Size'], ['Small'], ['Large'], ['Medium']],
@@ -95,11 +95,20 @@ class SkuImportWorkbookTests extends OFBizTestCase {
         ]
     }
 
-    Map preview(byte[] bytes, GenericValue login = userLogin) {
+    /** The happy sheets with values only this case commits ('Grand', item 0901), so the other cases keep their expectations whatever the order. */
+    private static Map<String, List<List<Object>>> commitSheets() {
+        return [
+            'Test Colours': [['Colour', 'Code', 'Note'], ['White', 'WX', 'code differs']],
+            'Test Sizes':   [['Size'], ['Grand']],
+            'Test Items':   [['Colour', 'Name', 'Seq', 'SKU'], ['Black', 'abc', '0901', 'TBK-ABC0901']],
+        ]
+    }
+
+    private Map preview(byte[] bytes, GenericValue login = userLogin) {
         return dispatcher.runSync('previewSkuWorkbook', [uploadedFile: ByteBuffer.wrap(bytes), fileName: 'test.xlsx', userLogin: login])
     }
 
-    Map commit(String skuImportId, String fingerprint, List<String> seqs, Map extra = [:]) {
+    private Map commit(String skuImportId, String fingerprint, List<String> seqs, Map extra = [:]) {
         try {
             return dispatcher.runSync('commitSkuWorkbookImport', [skuImportId: skuImportId, fingerprint: fingerprint, applyChangeSeqs: seqs,
                                                                    userLogin: userLogin] + extra)
@@ -108,28 +117,28 @@ class SkuImportWorkbookTests extends OFBizTestCase {
         }
     }
 
-    List<GenericValue> changes(String skuImportId) {
+    private List<GenericValue> changes(String skuImportId) {
         return EntityQuery.use(delegator).from('FtmSkuImportChange').where('skuImportId', skuImportId).orderBy('changeSeq').queryList()
     }
 
-    Map<String, Integer> kinds(List<GenericValue> rows) {
+    private Map<String, Integer> kinds(List<GenericValue> rows) {
         return rows.countBy { GenericValue c -> c.kindId as String }
     }
 
-    List<String> seqsOf(List<GenericValue> rows, Closure<Boolean> pick) {
+    private List<String> seqsOf(List<GenericValue> rows, Closure<Boolean> pick) {
         return rows.findAll(pick).collect { GenericValue c -> (c.changeSeq as Long).toString() }
     }
 
-    Map<String, Long> counts() {
+    private Map<String, Long> counts() {
         return COUNTED.collectEntries { String e -> [(e): EntityQuery.use(delegator).from(e).queryCount()] }
     }
 
-    GenericValue feature(String typeId, String description) {
+    private GenericValue feature(String typeId, String description) {
         return EntityQuery.use(delegator).from('ProductFeature').where('productFeatureTypeId', typeId).queryList()
                 .find { GenericValue f -> description.equalsIgnoreCase(f.description as String) }
     }
 
-    String nextSizeCode() {
+    private String nextSizeCode() {
         List<Integer> codes = EntityQuery.use(delegator).from('ProductFeature').where('productFeatureTypeId', 'SKU_TEST_SIZE').queryList()
                 *.idCode.collect { Object c -> (c as String).toInteger() }
         return String.valueOf(codes.max() + 1).padLeft(2, '0')
@@ -143,7 +152,8 @@ class SkuImportWorkbookTests extends OFBizTestCase {
         assert ServiceUtil.isSuccess(res) : ServiceUtil.getErrorMessage(res)
         List<GenericValue> rows = changes(res.skuImportId as String)
         Map<String, Integer> k = kinds(rows)
-        assert k.VOCAB_CODE_DIFFERS == 1 && k.VOCAB_MASTER_ONLY == 1 && k.VOCAB_NEW == 1 : "vocabulary kinds: ${k}"
+        // VOCAB_MASTER_ONLY is >= 1: other cases of this class add sizes the happy sheets never list (run order is not fixed)
+        assert k.VOCAB_CODE_DIFFERS == 1 && k.VOCAB_MASTER_ONLY >= 1 && k.VOCAB_NEW == 1 : "vocabulary kinds: ${k}"
         assert k.ITEM_NEW == 1 && k.ITEM_SAME == 1 && k.ITEM_DISAGREES == 1 && k.ITEM_REFUSED == 1 : "item kinds: ${k}"
         assert k.SHEET_UNMAPPED == 1 && !k.HEADER_MISSING && !k.COLUMN_UNMAPPED && !k.VOCAB_DUPLICATE_KEY : "structure kinds: ${k}"
         assert k.values().sum() == rows.size() && rows.size() == res.changeCount : 'a row is missing or counted twice'
@@ -188,19 +198,19 @@ class SkuImportWorkbookTests extends OFBizTestCase {
 
     void testCommitAppliesTheTickedRowsWithOneAuditRowEach() {
         String expectedCode = nextSizeCode()
-        Map res = preview(workbook(happySheets()))
+        Map res = preview(workbook(commitSheets()))
         assert ServiceUtil.isSuccess(res) : ServiceUtil.getErrorMessage(res)
         List<GenericValue> rows = changes(res.skuImportId as String)
-        GenericValue large = rows.find { GenericValue c -> c.kindId == 'VOCAB_NEW' }
-        assert large.keyValue == 'Large' && large.newValue == expectedCode : 'the master mints the next code in the type\'s own width'
+        GenericValue grand = rows.find { GenericValue c -> c.kindId == 'VOCAB_NEW' }
+        assert grand.keyValue == 'Grand' && grand.newValue == expectedCode : 'the master mints the next code in the type\'s own width'
         List<String> ticked = seqsOf(rows) { GenericValue c -> c.severityId == 'APPLICABLE' && c.applyDefault == 'Y' }
         assert ticked.size() == 2
         Map done = commit(res.skuImportId as String, res.fingerprint as String, ticked)
         assert ServiceUtil.isSuccess(done) : ServiceUtil.getErrorMessage(done)
         assert done.appliedCount == 2
-        GenericValue made = feature('SKU_TEST_SIZE', 'Large')
-        assert made != null && made.idCode == expectedCode && made.defaultSequenceNum == large.sequenceNum
-        assert dispatcher.runSync('findProductBySku', [skuCode: 'TBKABC0801', userLogin: userLogin]).productId != null
+        GenericValue made = feature('SKU_TEST_SIZE', 'Grand')
+        assert made != null && made.idCode == expectedCode && made.defaultSequenceNum == grand.sequenceNum
+        assert dispatcher.runSync('findProductBySku', [skuCode: 'TBKABC0901', userLogin: userLogin]).productId != null
         List<GenericValue> after = changes(res.skuImportId as String)
         List<GenericValue> applied = after.findAll { GenericValue c -> c.applied == 'Y' }
         assert applied*.changeSeq*.toString().sort() == ticked.sort()
@@ -211,7 +221,7 @@ class SkuImportWorkbookTests extends OFBizTestCase {
         GenericValue header = EntityQuery.use(delegator).from('FtmSkuImport').where('skuImportId', res.skuImportId).queryOne()
         assert header.statusId == 'FTMSKU_COMMITTED' && header.appliedCount == 2L && header.committedByUserLoginId == userLogin.userLoginId
         // the same workbook again: nothing new
-        Map again = preview(workbook(happySheets()))
+        Map again = preview(workbook(commitSheets()))
         Map<String, Integer> k = kinds(changes(again.skuImportId as String))
         assert !k.VOCAB_NEW && !k.ITEM_NEW && k.ITEM_SAME == 1 : "second preview: ${k}"
     }

@@ -67,8 +67,8 @@ Map change(String kindId, String severityId, Map fields) {
  */
 String fingerprint(List<Map> changes) {
     List<String> lines = changes.collect { Map c ->
-        [c.kindId, c.sheetName, c.header, c.keyValue, c.oldValue, c.newValue, c.pkText, c.payload].collect { Object v -> v == null ? '' : v as String }
-                .join('|')
+        [c.kindId, c.sheetName, c.header, c.keyValue, c.oldValue, c.newValue, c.pkText, c.payload]
+                .collect { Object v -> v == null ? '' : v as String }.join('|')
     }
     return sha256(lines.sort().join('\n'))
 }

@@ -98,24 +98,32 @@ final class WorkbookReader implements Closeable {
         int last = Math.min(sheet.lastRowNum, sheet.firstRowNum + HEADER_SCAN_ROWS)
         for (int r = sheet.firstRowNum; r <= last; r++) {
             Row row = sheet.getRow(r)
-            if (row == null) {
-                continue
-            }
-            Map<String, Integer> columns = [:]
-            Map<String, String> written = [:]
-            for (Cell cell : row) {
-                String text = cellText(cell)
-                String key = normalise(text)
-                if (key && !columns.containsKey(key)) {
-                    columns[key] = cell.columnIndex
-                    written[key] = text
+            Map<String, String> written = row == null ? [:] : headersOf(row)
+            if (written.keySet().containsAll(wanted)) {
+                Map<String, Integer> columns = [:]
+                for (Cell cell : row) {
+                    String key = normalise(cellText(cell))
+                    if (key && !columns.containsKey(key)) {
+                        columns[key] = cell.columnIndex
+                    }
                 }
-            }
-            if (columns.keySet().containsAll(wanted)) {
                 return new SheetTable(this, sheet, r, columns, written)
             }
         }
         return null
+    }
+
+    /** A row's non-blank cells as normalised header -> header as written; the first cell carrying a header wins. */
+    private Map<String, String> headersOf(Row row) {
+        Map<String, String> written = [:]
+        for (Cell cell : row) {
+            String text = cellText(cell)
+            String key = normalise(text)
+            if (key && !written.containsKey(key)) {
+                written[key] = text
+            }
+        }
+        return written
     }
 
     @Override
