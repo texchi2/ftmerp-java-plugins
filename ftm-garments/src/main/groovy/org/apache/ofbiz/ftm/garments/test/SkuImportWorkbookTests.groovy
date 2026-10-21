@@ -139,8 +139,13 @@ class SkuImportWorkbookTests extends OFBizTestCase {
         List<GenericValue> rows = changes(res.skuImportId as String)
         List<String> ticked = seqsOf(rows) { GenericValue c -> c.kindId == 'VOCAB_CODE_DIFFERS' }
         assert ticked.size() == 1
+        Map before = counts()
         Map done = commit(res.skuImportId as String, res.fingerprint as String, ticked)
         assert ServiceUtil.isSuccess(done) : ServiceUtil.getErrorMessage(done)
+        assert done.appliedCount == 1 : "one ticked row, ${done.appliedCount} applied"
+        assert counts() == before : 'a code change adds no row, and the unticked rows add nothing'
+        assert changes(res.skuImportId as String).findAll { GenericValue c -> c.severityId == 'APPLICABLE' && !(c.changeSeq.toString() in ticked) }
+                .every { GenericValue c -> c.applied != 'Y' } : 'an unticked applicable row was applied'
         GenericValue white = feature('SKU_TEST_COLOR', 'White')
         assert white.idCode == 'WX'
         GenericValue audit = changes(res.skuImportId as String).find { GenericValue c -> c.kindId == 'VOCAB_CODE_DIFFERS' }
