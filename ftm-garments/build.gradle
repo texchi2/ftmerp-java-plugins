@@ -1,3 +1,9 @@
 dependencies {
-    // Core OFBiz dependencies are provided by the framework at runtime
+    // Core OFBiz dependencies are provided by the framework at runtime.
+    // SKU workbook import (DESIGN_sku_workbook_import_2026-10-22): the same POI set ftm-wifi-enrollment pins.
+    pluginLibsCompile 'org.apache.poi:poi:5.3.0'
+    pluginLibsCompile 'org.apache.poi:poi-ooxml:5.3.0'
+    pluginLibsCompile 'org.apache.xmlbeans:xmlbeans:5.2.1'
+    pluginLibsCompile 'org.apache.commons:commons-compress:1.26.2'
+    pluginLibsCompile 'commons-io:commons-io:2.16.1'
 }

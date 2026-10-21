@@ -208,4 +208,57 @@
         <attribute name="productId" type="String" mode="OUT" optional="true"/>
     </service>
 
+    <!-- ===== SKU workbook import (DESIGN_sku_workbook_import_2026-10-22) - every service behind FTM_GARMENTS_IMPORT ===== -->
+    <service name="previewSkuWorkbook" engine="groovy"
+        location="component://ftm-garments/groovyScripts/ftm/garments/FtmSkuImportServices.groovy"
+        invoke="previewSkuWorkbook" auth="true" use-transaction="true" transaction-timeout="900">
+        <description>Store an uploaded .xlsx and classify every difference between it and the master into exactly one
+            change row (vocabulary and items, by header name, never by position). Writes the import record, its file and
+            its change rows only; the master is not touched. The fingerprint is the sha256 of the canonical difference
+            list; the commit must reproduce it.</description>
+        <required-permissions join-type="AND">
+            <check-permission permission="FTM_GARMENTS" action="_IMPORT"/>
+        </required-permissions>
+        <attribute name="uploadedFile"    type="java.nio.ByteBuffer" mode="IN"  optional="false"/>
+        <attribute name="fileName"        type="String"  mode="IN"  optional="true"/>
+        <attribute name="skuImportId"     type="String"  mode="OUT" optional="false"/>
+        <attribute name="fingerprint"     type="String"  mode="OUT" optional="false"/>
+        <attribute name="changeCount"     type="Integer" mode="OUT" optional="false"/>
+        <attribute name="errorCount"      type="Integer" mode="OUT" optional="false"/>
+        <attribute name="warningCount"    type="Integer" mode="OUT" optional="false"/>
+        <attribute name="applicableCount" type="Integer" mode="OUT" optional="false"/>
+        <attribute name="infoCount"       type="Integer" mode="OUT" optional="false"/>
+        <attribute name="kindCounts"      type="Map"     mode="OUT" optional="false"/>
+    </service>
+
+    <service name="commitSkuWorkbookImport" engine="groovy"
+        location="component://ftm-garments/groovyScripts/ftm/garments/FtmSkuImportServices.groovy"
+        invoke="commitSkuWorkbookImport" auth="true" use-transaction="true" transaction-timeout="900">
+        <description>Apply the ticked applicable change rows of a previewed import in ONE transaction: vocabulary first,
+            then items; each applied row gets who, when, old and new value. Refused (nothing written) when the status is
+            not PREVIEWED, the fingerprint sent is not the preview's, the preview holds an error, the master or the sheet
+            map changed since the preview (the stored file re-classifies to another fingerprint), or nothing is ticked.
+            Any failure while applying rolls the whole commit back. failAfterApplied is a test fault: never set by a screen.</description>
+        <required-permissions join-type="AND">
+            <check-permission permission="FTM_GARMENTS" action="_IMPORT"/>
+        </required-permissions>
+        <attribute name="skuImportId"      type="String"  mode="IN"  optional="false"/>
+        <attribute name="fingerprint"      type="String"  mode="IN"  optional="false"/>
+        <attribute name="applyChangeSeqs"  type="List"    mode="IN"  optional="true"/>
+        <attribute name="failAfterApplied" type="Integer" mode="IN"  optional="true"/>
+        <attribute name="appliedCount"     type="Integer" mode="OUT" optional="false"/>
+    </service>
+
+    <service name="markSkuImportStatus" engine="groovy"
+        location="component://ftm-garments/groovyScripts/ftm/garments/FtmSkuImportServices.groovy"
+        invoke="markSkuImportStatus" auth="true" require-new-transaction="true">
+        <description>Record the outcome of a failed commit on the import (its own transaction, so the record survives the rollback).</description>
+        <required-permissions join-type="AND">
+            <check-permission permission="FTM_GARMENTS" action="_IMPORT"/>
+        </required-permissions>
+        <attribute name="skuImportId" type="String" mode="IN" optional="false"/>
+        <attribute name="statusId"    type="String" mode="IN" optional="false"/>
+        <attribute name="message"     type="String" mode="IN" optional="true"/>
+    </service>
+
 </services>

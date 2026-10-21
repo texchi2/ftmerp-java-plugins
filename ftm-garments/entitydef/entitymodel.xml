@@ -86,4 +86,105 @@
         </relation>
     </entity>
 
+    <!-- ===== SKU workbook import (DESIGN_sku_workbook_import_2026-10-22): OFBiz is the master, a workbook is a proposal.
+         The sheet map is DATA (what each sheet and its columns mean - never a column position in code). An import keeps
+         the file it was ruled on, and one change row per difference: the preview line and, once applied, the audit row
+         (who, when, old value, new value). The map rows for the owner's workbooks are private seed, not in this repository. -->
+    <entity entity-name="FtmSkuSheetMap" package-name="org.apache.ofbiz.ftm.garments"
+        title="FTM SKU Sheet Map" author="FTM Garments" version="1.0">
+        <field name="sheetMapId"  type="id"/>
+        <field name="sheetName"   type="description"><description>Workbook sheet name, matched trimmed and case-insensitively</description></field>
+        <field name="mapKindId"   type="id"><description>VOCAB (attribute lists, read column by column) | ITEMS (coded items, read row by row)</description></field>
+        <field name="skuRuleId"   type="id"/>
+        <field name="codeHeader"  type="description"><description>ITEMS: header of the column holding the workbook's code</description></field>
+        <field name="description" type="description"/>
+        <prim-key field="sheetMapId"/>
+        <relation type="one" fk-name="FTM_SKUMAP_RULE" rel-entity-name="FtmSkuRule">
+            <key-map field-name="skuRuleId"/>
+        </relation>
+    </entity>
+
+    <entity entity-name="FtmSkuSheetColumn" package-name="org.apache.ofbiz.ftm.garments"
+        title="FTM SKU Sheet Column" author="FTM Garments" version="1.0">
+        <field name="sheetMapId"           type="id"/>
+        <field name="columnSeq"            type="numeric"/>
+        <field name="keyHeader"            type="description"><description>VOCAB: header of the column whose values identify a feature (ProductFeature.description)</description></field>
+        <field name="codeHeader"           type="description"><description>VOCAB: header of the column holding the workbook's code for the key (optional)</description></field>
+        <field name="nameHeader"           type="description"><description>VOCAB: header of a column shown beside the key, for a person (optional)</description></field>
+        <field name="productFeatureTypeId" type="id"/>
+        <field name="compareCode"          type="indicator"><description>Y: a differing workbook code is listed (VOCAB_CODE_DIFFERS); N: shown only, the master mints</description></field>
+        <prim-key field="sheetMapId"/>
+        <prim-key field="columnSeq"/>
+        <relation type="one" fk-name="FTM_SKUCOL_MAP" rel-entity-name="FtmSkuSheetMap">
+            <key-map field-name="sheetMapId"/>
+        </relation>
+        <relation type="one" fk-name="FTM_SKUCOL_PFT" rel-entity-name="ProductFeatureType">
+            <key-map field-name="productFeatureTypeId"/>
+        </relation>
+    </entity>
+
+    <entity entity-name="FtmSkuImport" package-name="org.apache.ofbiz.ftm.garments"
+        title="FTM SKU Import" author="FTM Garments" version="1.0">
+        <field name="skuImportId"            type="id"/>
+        <field name="fileName"               type="long-varchar"/>
+        <field name="fileSha256"             type="long-varchar"/>
+        <field name="fileBytes"              type="numeric"/>
+        <field name="statusId"               type="id"><description>StatusItem of type FTM_SKU_IMPORT</description></field>
+        <field name="fingerprint"            type="long-varchar"><description>sha256 of the canonical difference list at preview; the commit must reproduce it</description></field>
+        <field name="uploadedByUserLoginId"  type="id-vlong"/>
+        <field name="uploadedDate"           type="date-time"/>
+        <field name="committedByUserLoginId" type="id-vlong"/>
+        <field name="committedDate"          type="date-time"/>
+        <field name="changeCount"            type="numeric"/>
+        <field name="errorCount"             type="numeric"/>
+        <field name="appliedCount"           type="numeric"/>
+        <field name="message"                type="very-long"><description>Why a commit was refused or rolled back</description></field>
+        <prim-key field="skuImportId"/>
+        <relation type="one" fk-name="FTM_SKUIMP_STATUS" rel-entity-name="StatusItem">
+            <key-map field-name="statusId"/>
+        </relation>
+    </entity>
+
+    <entity entity-name="FtmSkuImportFile" package-name="org.apache.ofbiz.ftm.garments"
+        title="FTM SKU Import File" author="FTM Garments" version="1.0">
+        <field name="skuImportId" type="id"/>
+        <field name="fileData"    type="byte-array"><description>The workbook as uploaded; the commit re-reads it, nothing is kept in the HTTP session</description></field>
+        <prim-key field="skuImportId"/>
+        <relation type="one" fk-name="FTM_SKUIMPF_IMP" rel-entity-name="FtmSkuImport">
+            <key-map field-name="skuImportId"/>
+        </relation>
+    </entity>
+
+    <entity entity-name="FtmSkuImportChange" package-name="org.apache.ofbiz.ftm.garments"
+        title="FTM SKU Import Change" author="FTM Garments" version="1.0">
+        <field name="skuImportId"          type="id"/>
+        <field name="changeSeq"            type="numeric"/>
+        <field name="kindId"               type="id"><description>VOCAB_NEW | VOCAB_CODE_DIFFERS | VOCAB_MASTER_ONLY | VOCAB_DUPLICATE_KEY | ITEM_NEW | ITEM_SAME | ITEM_DISAGREES | ITEM_REFUSED | SHEET_UNMAPPED | COLUMN_UNMAPPED | HEADER_MISSING | ITEMS_UNREADABLE</description></field>
+        <field name="severityId"           type="id"><description>ERROR (blocks the commit) | WARNING | INFO | APPLICABLE (may be ticked)</description></field>
+        <field name="sheetName"            type="description"/>
+        <field name="rowNum"               type="numeric"><description>Excel row number, for a person</description></field>
+        <field name="header"               type="description"/>
+        <field name="skuRuleId"            type="id"/>
+        <field name="productFeatureTypeId" type="id"/>
+        <field name="keyValue"             type="long-varchar"/>
+        <field name="displayName"          type="long-varchar"><description>The name a person reads beside the key</description></field>
+        <field name="entityName"           type="id-long"/>
+        <field name="pkText"               type="long-varchar"/>
+        <field name="fieldName"            type="id-long"/>
+        <field name="oldValue"             type="long-varchar"/>
+        <field name="newValue"             type="long-varchar"/>
+        <field name="sequenceNum"          type="numeric"><description>VOCAB_NEW: the defaultSequenceNum the master gives the new feature</description></field>
+        <field name="payload"              type="very-long"><description>ITEM_NEW: the row's input values as JSON, for the commit</description></field>
+        <field name="reason"               type="very-long"/>
+        <field name="applyDefault"         type="indicator"/>
+        <field name="applied"              type="indicator"/>
+        <field name="appliedByUserLoginId" type="id-vlong"/>
+        <field name="appliedDate"          type="date-time"/>
+        <prim-key field="skuImportId"/>
+        <prim-key field="changeSeq"/>
+        <relation type="one" fk-name="FTM_SKUIMPC_IMP" rel-entity-name="FtmSkuImport">
+            <key-map field-name="skuImportId"/>
+        </relation>
+    </entity>
+
 </entitymodel>

@@ -16,6 +16,10 @@
         <menu-item name="SkuGenerator" title="SKU Generator">
             <link target="SkuGenerator"/>
         </menu-item>
+        <menu-item name="SkuImport" title="SKU Import">
+            <condition><if-has-permission permission="FTM_GARMENTS" action="_IMPORT"/></condition>
+            <link target="SkuImport"/>
+        </menu-item>
     </menu>
 
 </menus>

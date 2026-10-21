@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+http://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+<!-- SYNTHETIC sheet map for the workbook-import tests (rule TEST_SKU from FtmSkuTestData.xml). No real item data. -->
+<entity-engine-xml>
+    <!-- a numeric-coded list the import can mint the next code for (01, 02 -> 03) -->
+    <ProductFeatureType productFeatureTypeId="SKU_TEST_SIZE" description="Test SKU size"/>
+    <ProductFeature productFeatureId="SKU_TEST_S_01" productFeatureTypeId="SKU_TEST_SIZE" description="Small" idCode="01" defaultSequenceNum="1"/>
+    <ProductFeature productFeatureId="SKU_TEST_S_02" productFeatureTypeId="SKU_TEST_SIZE" description="Medium" idCode="02" defaultSequenceNum="2"/>
+
+    <!-- the synthetic workbook's sheets: a colour list whose codes are compared, a size list, an item list -->
+    <FtmSkuSheetMap sheetMapId="TEST_COLOURS" sheetName="Test Colours" mapKindId="VOCAB" skuRuleId="TEST_SKU" description="synthetic colour list"/>
+    <FtmSkuSheetColumn sheetMapId="TEST_COLOURS" columnSeq="1" keyHeader="Colour" codeHeader="Code" nameHeader="Note"
+        productFeatureTypeId="SKU_TEST_COLOR" compareCode="Y"/>
+    <FtmSkuSheetMap sheetMapId="TEST_SIZES" sheetName="Test Sizes" mapKindId="VOCAB" skuRuleId="TEST_SKU" description="synthetic size list"/>
+    <FtmSkuSheetColumn sheetMapId="TEST_SIZES" columnSeq="1" keyHeader="Size" productFeatureTypeId="SKU_TEST_SIZE" compareCode="N"/>
+    <FtmSkuSheetMap sheetMapId="TEST_ITEMS" sheetName="Test Items" mapKindId="ITEMS" skuRuleId="TEST_SKU" codeHeader="SKU" description="synthetic item list"/>
+
+    <!-- a login in no security group: both import services must refuse it -->
+    <UserLogin userLoginId="skuimport-nobody" currentPassword="{SHA}47b56994cbc2b6d10aa1be30f70165adb305a41a" enabled="Y" requirePasswordChange="N"/>
+</entity-engine-xml>

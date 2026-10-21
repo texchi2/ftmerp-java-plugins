@@ -105,4 +105,83 @@
             </widgets>
         </section>
     </screen>
+
+    <!-- ===== SKU workbook import (DESIGN_sku_workbook_import_2026-10-22): every screen behind login (controller) AND
+         the FTM_GARMENTS_IMPORT permission; the services check the same permission, so the screens are not the fence. ===== -->
+    <screen name="SkuImportUpload">
+        <section>
+            <widgets>
+                <decorator-screen name="main-decorator" location="${parameters.mainDecoratorLocation}">
+                    <decorator-section name="body">
+                        <section>
+                            <condition><if-has-permission permission="FTM_GARMENTS" action="_IMPORT"/></condition>
+                            <widgets>
+                                <screenlet title="SKU workbook import - upload">
+                                    <label text="Upload the owner's workbook (.xlsx). The master is not touched: the preview lists every difference, and only the rows ticked there are committed, in one transaction. The size limit is checked before anything is stored."/>
+                                    <include-form name="SkuWorkbookUploadForm" location="component://ftm-garments/widget/FtmGarmentsForms.xml"/>
+                                </screenlet>
+                            </widgets>
+                            <fail-widgets>
+                                <label style="h3" text="The SKU workbook import needs the FTM_GARMENTS_IMPORT permission."/>
+                            </fail-widgets>
+                        </section>
+                    </decorator-section>
+                </decorator-screen>
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="SkuImportPreview">
+        <section>
+            <actions>
+                <script location="component://ftm-garments/groovyScripts/ftm/garments/SkuImportPreviewActions.groovy"/>
+            </actions>
+            <widgets>
+                <decorator-screen name="main-decorator" location="${parameters.mainDecoratorLocation}">
+                    <decorator-section name="body">
+                        <section>
+                            <condition><if-has-permission permission="FTM_GARMENTS" action="_IMPORT"/></condition>
+                            <widgets>
+                                <screenlet title="SKU workbook import - preview: the differences, for ruling">
+                                    <platform-specific>
+                                        <html><html-template location="component://ftm-garments/template/SkuImportPreview.ftl"/></html>
+                                    </platform-specific>
+                                </screenlet>
+                            </widgets>
+                            <fail-widgets>
+                                <label style="h3" text="The SKU workbook import needs the FTM_GARMENTS_IMPORT permission."/>
+                            </fail-widgets>
+                        </section>
+                    </decorator-section>
+                </decorator-screen>
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="SkuImportSummary">
+        <section>
+            <actions>
+                <script location="component://ftm-garments/groovyScripts/ftm/garments/SkuImportSummaryActions.groovy"/>
+            </actions>
+            <widgets>
+                <decorator-screen name="main-decorator" location="${parameters.mainDecoratorLocation}">
+                    <decorator-section name="body">
+                        <section>
+                            <condition><if-has-permission permission="FTM_GARMENTS" action="_IMPORT"/></condition>
+                            <widgets>
+                                <screenlet title="SKU workbook import - summary and audit">
+                                    <platform-specific>
+                                        <html><html-template location="component://ftm-garments/template/SkuImportSummary.ftl"/></html>
+                                    </platform-specific>
+                                </screenlet>
+                            </widgets>
+                            <fail-widgets>
+                                <label style="h3" text="The SKU workbook import needs the FTM_GARMENTS_IMPORT permission."/>
+                            </fail-widgets>
+                        </section>
+                    </decorator-section>
+                </decorator-screen>
+            </widgets>
+        </section>
+    </screen>
 </screens>

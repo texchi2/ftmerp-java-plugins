@@ -85,4 +85,12 @@
         </field>
     </form>
 
+    <!-- SKU workbook import: the upload (DESIGN_sku_workbook_import_2026-10-22 §3); preview and summary are templates -->
+    <form name="SkuWorkbookUploadForm" type="upload" target="PreviewSkuImport">
+        <field name="uploadedFile" title="Workbook (.xlsx)"><file/></field>
+        <field name="previewButton" title="Preview the differences">
+            <submit button-type="button"/>
+        </field>
+    </form>
+
 </forms>

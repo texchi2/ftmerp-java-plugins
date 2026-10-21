@@ -23,6 +23,32 @@
         <response name="error" type="view" value="SkuGenerator"/>
     </request-map>
 
+    <!-- SKU workbook import (DESIGN_sku_workbook_import_2026-10-22): login here, FTM_GARMENTS_IMPORT on screens and services -->
+    <request-map uri="SkuImport">
+        <security https="false" auth="true"/>
+        <response name="success" type="view" value="SkuImportUpload"/>
+    </request-map>
+    <request-map uri="PreviewSkuImport">
+        <security https="false" auth="true"/>
+        <event type="groovy" path="component://ftm-garments/groovyScripts/ftm/garments/SkuImportEvents.groovy" invoke="preview"/>
+        <response name="success" type="view" value="SkuImportPreview"/>
+        <response name="error" type="view" value="SkuImportUpload"/>
+    </request-map>
+    <request-map uri="SkuImportPreview">
+        <security https="false" auth="true"/>
+        <response name="success" type="view" value="SkuImportPreview"/>
+    </request-map>
+    <request-map uri="CommitSkuImport">
+        <security https="false" auth="true"/>
+        <event type="groovy" path="component://ftm-garments/groovyScripts/ftm/garments/SkuImportEvents.groovy" invoke="commit"/>
+        <response name="success" type="view" value="SkuImportSummary"/>
+        <response name="error" type="view" value="SkuImportPreview"/>
+    </request-map>
+    <request-map uri="SkuImportSummary">
+        <security https="false" auth="true"/>
+        <response name="success" type="view" value="SkuImportSummary"/>
+    </request-map>
+
     <request-map uri="FindStyles">
         <security https="false" auth="true"/>
         <response name="success" type="view" value="FindStyles"/>
@@ -61,6 +87,9 @@
         page="component://ftm-garments/widget/FtmGarmentsScreens.xml#FindStyles"/>
 
     <view-map name="SkuGenerator" type="screen" page="component://ftm-garments/widget/FtmGarmentsScreens.xml#SkuGenerator"/>
+    <view-map name="SkuImportUpload" type="screen" page="component://ftm-garments/widget/FtmGarmentsScreens.xml#SkuImportUpload"/>
+    <view-map name="SkuImportPreview" type="screen" page="component://ftm-garments/widget/FtmGarmentsScreens.xml#SkuImportPreview"/>
+    <view-map name="SkuImportSummary" type="screen" page="component://ftm-garments/widget/FtmGarmentsScreens.xml#SkuImportSummary"/>
     <view-map name="FindStyles" type="screen"
         page="component://ftm-garments/widget/FtmGarmentsScreens.xml#FindStyles"/>
 

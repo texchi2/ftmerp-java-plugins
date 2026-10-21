@@ -45,4 +45,14 @@ under the License.
     <test-case case-name="sku-service-tests">
         <junit-test-suite class-name="org.apache.ofbiz.ftm.garments.test.SkuServiceTests"/>
     </test-case>
+    <!-- SKU workbook import (DESIGN_sku_workbook_import_2026-10-22, gate G1): seed (permission + status) and the synthetic sheet map -->
+    <test-case case-name="load-sku-import-seed-data">
+        <entity-xml action="load" entity-xml-url="component://ftm-garments/data/FtmSkuImportSeedData.xml"/>
+    </test-case>
+    <test-case case-name="load-sku-import-test-data">
+        <entity-xml action="load" entity-xml-url="component://ftm-garments/testdef/data/FtmSkuImportTestData.xml"/>
+    </test-case>
+    <test-case case-name="sku-import-workbook-tests">
+        <junit-test-suite class-name="org.apache.ofbiz.ftm.garments.test.SkuImportWorkbookTests"/>
+    </test-case>
 </test-suite>

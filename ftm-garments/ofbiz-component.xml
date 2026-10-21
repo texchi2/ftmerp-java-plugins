@@ -10,6 +10,8 @@
 
     <!-- SKU type data (GoodIdentificationTypes): seed, so a standard seed load installs it -->
     <entity-resource type="data" reader-name="seed" loader="main" location="data/FtmSkuTypeData.xml"/>
+    <!-- SKU workbook import: permission + status items (DESIGN_sku_workbook_import_2026-10-22) -->
+    <entity-resource type="data" reader-name="seed" loader="main" location="data/FtmSkuImportSeedData.xml"/>
 
     <service-resource type="model" loader="main"
         location="servicedef/services.xml"/>
