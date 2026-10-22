@@ -7,6 +7,9 @@
     <screen name="main-decorator">
         <section>
             <actions>
+                <!-- the framework's login / forgot-password / error pages render ${uiLabelMap.Common*}: without this map they
+                     show the raw keys (CommonUsername, CommonForgotYourPassword...) - seen through the SKU door, 2026-10-22 -->
+                <property-map resource="CommonUiLabels" map-name="uiLabelMap" global="true"/>
                 <set field="activeApp" value="ftm-garments" global="true"/>
                 <set field="applicationMenuName" value="FtmGarmentsAppBar" global="true"/>
                 <set field="applicationMenuLocation"
