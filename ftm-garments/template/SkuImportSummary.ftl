@@ -24,7 +24,7 @@ under the License.
   <p><b>Import ${skuImport.skuImportId}</b> &middot; ${skuImport.fileName!""} &middot; sha256 ${skuImport.fileSha256!""}<br/>
      status <b>${(statusItem.description)!skuImport.statusId}</b>
      <#if skuImport.committedDate??>&middot; committed by ${skuImport.committedByUserLoginId!""} at ${skuImport.committedDate}</#if>
-     &middot; applied ${(skuImport.appliedCount!0)?c} of ${applied?size?c + notApplied?size?c} applicable rows
+     &middot; applied ${(skuImport.appliedCount!0)?c} of ${(applied?size + notApplied?size)?c} applicable rows
      <#if skuImport.message?has_content><br/>${skuImport.message}</#if></p>
   <h3>Applied (${applied?size?c}) &mdash; the audit</h3>
   <table class="basic-table hover-bar">
