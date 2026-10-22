@@ -40,6 +40,10 @@ class SkuServiceTests extends OFBizTestCase {
         assert SkuComposer.applyTextOps('  a   b ', 'TRIM') == 'a b'
         assert SkuComposer.applyTextOps('HS', 'RIGHT:1') == 'S'
         assert SkuComposer.applyTextOps('ab', 'LEFT:5') == 'ab'
+        assert SkuComposer.applyTextOps('6.0 mm', 'STRIP_UNIT|NUMBER') == '6'
+        assert SkuComposer.applyTextOps('1.50 mm', 'STRIP_UNIT') == '1.50' && SkuComposer.applyTextOps('1.50', 'NUMBER') == '1.5'
+        assert SkuComposer.applyTextOps('30/3', 'STRIP_UNIT|NUMBER') == '30/3' && SkuComposer.applyTextOps('abc', 'NUMBER') == 'abc'
+        assert SkuComposer.applyTextOps('0042', 'NUMBER') == '42'   // the documented hazard: never on a zero-padded code
         assert SkuComposer.canonical('t-bk1-0002') == 'TBK10002'
     }
 

@@ -25,6 +25,8 @@ import java.sql.Timestamp
 import org.apache.ofbiz.base.util.UtilDateTime
 import org.apache.ofbiz.entity.GenericValue
 import org.apache.ofbiz.ftm.garments.sku.SheetTable
+import org.apache.ofbiz.ftm.garments.sku.SkuRefusedException
+import org.apache.ofbiz.ftm.garments.sku.SkuComposer
 import org.apache.ofbiz.ftm.garments.sku.TableLookup
 import org.apache.ofbiz.ftm.garments.sku.WorkbookReader
 import org.apache.ofbiz.service.ServiceUtil
@@ -236,9 +238,14 @@ void classifyItems(WorkbookReader reader, String sheetName, GenericValue map, Li
                 reason: "no row within the first ${WorkbookReader.HEADER_SCAN_ROWS} carries all of: ${required.join(', ')}"])
         return
     }
+    Map<String, String> ops = valueOpsOf(map, common, out)
+    if (ops == null) {
+        return
+    }
     List<Map<String, String>> rows = table.rows(required)
     List<Map> importRows = rows.collect { Map<String, String> r ->
-        [ref: "${sheetName}!${r._row}".toString(), skuRuleId: ruleId, values: inputs.collectEntries { String h -> [(h): r[h]] },
+        [ref: "${sheetName}!${r._row}".toString(), skuRuleId: ruleId,
+         values: inputs.collectEntries { String h -> [(h): cooked(r[h], ops[WorkbookReader.normalise(h)])] },
          workbookCode: r[codeHeader] ?: null, row: r._row as Integer]
     }
     if (!importRows) {
@@ -272,6 +279,31 @@ void classifyItems(WorkbookReader reader, String sheetName, GenericValue map, Li
         out << change('ITEM_REFUSED', 'WARNING', common + [rowNum: row.row, displayName: row.values.values().join(' / '),
                 reason: 'the workbook shows no code for the row and the rule refuses it too'])
     }
+}
+
+/** A cell's text after the column's value ops, or as read when the column has none. */
+static String cooked(String text, String ops) {
+    return ops ? SkuComposer.applyTextOps(text, ops) : text
+}
+
+/**
+ * The ITEMS map's per-input value ops (FtmSkuSheetColumn.keyHeader -> valueOps, header normalised), each checked against
+ * SkuComposer's vocabulary first; null after reporting MAP_INVALID when an op is unknown (nothing of the sheet is classified).
+ */
+Map<String, String> valueOpsOf(GenericValue map, Map common, List<Map> out) {
+    List<GenericValue> cols = from('FtmSkuSheetColumn').where('sheetMapId', map.sheetMapId).orderBy('columnSeq').queryList()
+    Map<String, String> ops = [:]
+    for (GenericValue col in cols.findAll { GenericValue c -> c.valueOps && c.keyHeader }) {
+        try {
+            SkuComposer.applyTextOps('', col.valueOps as String)
+        } catch (SkuRefusedException e) {
+            out << change('MAP_INVALID', 'ERROR', common + [header: col.keyHeader,
+                    reason: "sheet map ${map.sheetMapId} column ${col.columnSeq}: valueOps [${col.valueOps}] - ${e.message}"])
+            return null
+        }
+        ops[WorkbookReader.normalise(col.keyHeader as String)] = col.valueOps as String
+    }
+    return ops
 }
 
 Map severityCounts(List<Map> changes) {

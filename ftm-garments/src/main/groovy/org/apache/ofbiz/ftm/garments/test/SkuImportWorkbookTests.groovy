@@ -26,6 +26,7 @@ import org.apache.ofbiz.service.GenericServiceException
 import org.apache.ofbiz.service.ServiceUtil
 import org.apache.ofbiz.service.testtools.OFBizTestCase
 import org.apache.poi.ss.usermodel.Cell
+import org.apache.poi.ss.usermodel.CellStyle
 import org.apache.poi.ss.usermodel.Row
 import org.apache.poi.ss.usermodel.Sheet
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
@@ -69,7 +70,7 @@ class SkuImportWorkbookTests extends OFBizTestCase {
         assert k.VOCAB_CODE_DIFFERS == 1 && k.VOCAB_MASTER_ONLY >= 1 && k.VOCAB_NEW == 1 : "vocabulary kinds: ${k}"
         assert k.ITEM_NEW == 1 && k.ITEM_SAME == 1 && k.ITEM_DISAGREES == 1 && k.ITEM_REFUSED == 1 : "item kinds: ${k}"
         assert k.SHEET_UNMAPPED == 1 && !k.HEADER_MISSING && !k.HEADER_AMBIGUOUS : "structure kinds: ${k}"
-        assert !k.COLUMN_UNMAPPED && !k.VOCAB_DUPLICATE_KEY : "structure kinds: ${k}"
+        assert !k.COLUMN_UNMAPPED && !k.VOCAB_DUPLICATE_KEY && !k.MAP_INVALID : "structure kinds: ${k}"
         assert k.values().sum() == rows.size() && rows.size() == res.changeCount : 'a row is missing or counted twice'
         assert res.errorCount == 0 && res.applicableCount == 3 : "severities: ${res}"
         GenericValue differs = rows.find { GenericValue c -> c.kindId == 'VOCAB_CODE_DIFFERS' }
@@ -132,6 +133,43 @@ class SkuImportWorkbookTests extends OFBizTestCase {
         Map res2 = preview(workbook(twice))
         GenericValue a2 = changes(res2.skuImportId as String).find { GenericValue c -> c.kindId == 'HEADER_AMBIGUOUS' }
         assert a2 != null && a2.reason.contains("code header 'SKU' appears 2 times")
+        Map after = counts()
+        COUNTED.findAll { String e -> !e.startsWith('FtmSkuImport') }.each { String e -> assert after[e] == before[e] : "${e} changed" }
+    }
+
+    void testValueOpsNormaliseAnInputBeforeMatching() {
+        // the 2024 drawcord Width: a number shown as "6.0 mm" by its format, while the master holds "6"; the owner's code
+        // column carries the code built from the stored value
+        List<List<Object>> items = [['Colour', 'Name', 'Seq', 'SKU'], ['Black', 'abc', [num: 8801.0, format: '0.0 "pcs"'], 'TBK-ABC8801']]
+        Map plain = preview(workbook(['Test Items': items]))
+        Map withOps = preview(workbook(['Test Items Ops': items]))
+        assert ServiceUtil.isSuccess(plain) && ServiceUtil.isSuccess(withOps)
+        GenericValue opsRow = EntityQuery.use(delegator).from('FtmSkuSheetColumn').where('sheetMapId', 'TEST_ITEMS_OPS').queryFirst()
+        assert opsRow?.valueOps == 'STRIP_UNIT|NUMBER' : "the ops row as loaded: ${opsRow}"
+        List<GenericValue> rawRows = changes(plain.skuImportId as String)
+        List<GenericValue> opsRows = changes(withOps.skuImportId as String)
+        // without ops the rule sees the text a person sees ("801.0 pcs"), so its code differs from the owner's
+        assert kinds(rawRows).ITEM_DISAGREES == 1 && !kinds(rawRows).ITEM_NEW : "plain: ${kinds(rawRows)}"
+        GenericValue cooked = opsRows.find { GenericValue c -> c.kindId == 'ITEM_NEW' }
+        List<String> told = opsRows.collect { GenericValue c -> "${c.kindId} ${c.oldValue}->${c.newValue}: ${c.reason}".toString() }
+        assert cooked != null : "with ops (the rule's codeLength is 10, so the cooked seq must be 4 digits): ${told}"
+        assert cooked.payload.contains('"Seq":"8801"') && cooked.newValue == 'TBKABC8801' : "with STRIP_UNIT|NUMBER: ${cooked.payload}"
+    }
+
+    void testAnUnknownValueOpIsAnErrorThatBlocksTheCommit() {
+        Map before = counts()
+        Map<String, List<List<Object>>> sheets = happySheets()
+        sheets['Test Items Bad'] = sheets['Test Items']
+        Map res = preview(workbook(sheets))
+        assert ServiceUtil.isSuccess(res) : ServiceUtil.getErrorMessage(res)
+        List<GenericValue> rows = changes(res.skuImportId as String)
+        GenericValue bad = rows.find { GenericValue c -> c.kindId == 'MAP_INVALID' }
+        assert bad != null && bad.severityId == 'ERROR' && bad.sheetName == 'Test Items Bad' : "map invalid: ${bad}"
+        assert bad.reason.contains('[FOO]') : "the unknown op is named: ${bad.reason}"
+        assert !rows.any { GenericValue c -> c.sheetName == 'Test Items Bad' && c.kindId.startsWith('ITEM_') } : 'nothing classified under a bad map'
+        assert rows.count { GenericValue c -> c.sheetName == 'Test Items' && c.kindId.startsWith('ITEM_') } == 4 : 'the good map still classifies'
+        Map done = commit(res.skuImportId as String, res.fingerprint as String, seqsOf(rows) { GenericValue c -> c.severityId == 'APPLICABLE' })
+        assert ServiceUtil.isError(done) && ServiceUtil.getErrorMessage(done).startsWith('REFUSED: the preview holds errors')
         Map after = counts()
         COUNTED.findAll { String e -> !e.startsWith('FtmSkuImport') }.each { String e -> assert after[e] == before[e] : "${e} changed" }
     }
@@ -316,6 +354,12 @@ class SkuImportWorkbookTests extends OFBizTestCase {
                             Cell cell = row.createCell(c)
                             if (v instanceof Number) {
                                 cell.setCellValue((v as Number).doubleValue())
+                            } else if (v instanceof Map) {
+                                // a number shown through an Excel format, as the owner's sheets do: [num: 6.0, format: '0.0 "mm"']
+                                cell.setCellValue((v.num as Number).doubleValue())
+                                CellStyle style = wb.createCellStyle()
+                                style.dataFormat = wb.createDataFormat().getFormat(v.format as String)
+                                cell.cellStyle = style
                             } else {
                                 cell.setCellValue(v as String)
                             }

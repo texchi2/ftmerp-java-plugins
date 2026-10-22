@@ -26,6 +26,9 @@ package org.apache.ofbiz.ftm.garments.sku
  *   LITERAL  emit literalText
  *   INPUT    emit the caller's value for inputName, verbatim
  *   TEXT     emit the value after textOps, applied in order: LEFT:n | RIGHT:n | UPPER | TRIM (Excel semantics)
+ *            | STRIP_UNIT (drop a trailing unit word: '6.0 mm' -> '6.0') | NUMBER (a decimal in its shortest form:
+ *            '6.0' -> '6', '1.50' -> '1.5'; NOTE '0042' -> '42', so never on a zero-padded code). The same ops serve the
+ *            workbook import's per-column valueOps (FtmSkuSheetColumn, v0.3) - one vocabulary.
  *   FEATURE  emit the idCode of the ProductFeature the closure resolves for (productFeatureTypeId, inputName)
  * INPUT and TEXT may carry allowedFeatureTypeId (the workbook's drop-down): a value outside that list is refused.
  * A missing value or an unresolved feature REFUSES the whole code (SkuRefusedException) — never a partial code.
@@ -86,7 +89,7 @@ final class SkuComposer {
         return [code: code.toString(), canonical: canonical.toString(), featureIds: featureIds, attributes: attributes]
     }
 
-    /** Ops in order, separated by '|': LEFT:n, RIGHT:n, UPPER, TRIM (spaces only, inner runs collapsed, as Excel). */
+    /** Ops in order, separated by '|': LEFT:n, RIGHT:n, UPPER, TRIM (spaces only, inner runs collapsed, as Excel), STRIP_UNIT, NUMBER. */
     static String applyTextOps(String value, String ops) {
         String s = value
         for (String op in (ops ?: '').split(/\|/).findAll { String o -> o }) {
@@ -104,6 +107,12 @@ final class SkuComposer {
                     break
                 case 'TRIM':
                     s = s.replaceAll(/ +/, ' ').replaceAll(/^ | $/, '')
+                    break
+                case 'STRIP_UNIT':
+                    s = s.replaceFirst(/^\s*([-+]?\d[\d,]*(?:\.\d+)?)\s*[A-Za-z%°"']+\s*$/, '$1')
+                    break
+                case 'NUMBER':
+                    s = s ==~ /[-+]?\d+(\.\d+)?/ ? new BigDecimal(s).stripTrailingZeros().toPlainString() : s
                     break
                 default:
                     throw new SkuRefusedException("Unknown text op [${op}]")

@@ -29,6 +29,11 @@ under the License.
     <FtmSkuSheetMap sheetMapId="TEST_SIZES" sheetName="Test Sizes" mapKindId="VOCAB" skuRuleId="TEST_SKU" description="synthetic size list"/>
     <FtmSkuSheetColumn sheetMapId="TEST_SIZES" columnSeq="1" keyHeader="Size" productFeatureTypeId="SKU_TEST_SIZE" compareCode="N"/>
     <FtmSkuSheetMap sheetMapId="TEST_ITEMS" sheetName="Test Items" mapKindId="ITEMS" skuRuleId="TEST_SKU" codeHeader="SKU" description="synthetic item list"/>
+    <!-- v0.3: an item list whose Seq cells carry a unit and a decimal (STRIP_UNIT|NUMBER), and one with an unknown op -->
+    <FtmSkuSheetMap sheetMapId="TEST_ITEMS_OPS" sheetName="Test Items Ops" mapKindId="ITEMS" skuRuleId="TEST_SKU" codeHeader="SKU" description="synthetic item list with value ops"/>
+    <FtmSkuSheetColumn sheetMapId="TEST_ITEMS_OPS" columnSeq="1" keyHeader="Seq" valueOps="STRIP_UNIT|NUMBER"/>
+    <FtmSkuSheetMap sheetMapId="TEST_ITEMS_BAD" sheetName="Test Items Bad" mapKindId="ITEMS" skuRuleId="TEST_SKU" codeHeader="SKU" description="synthetic item list with an unknown op"/>
+    <FtmSkuSheetColumn sheetMapId="TEST_ITEMS_BAD" columnSeq="1" keyHeader="Seq" valueOps="FOO"/>
 
     <!-- the test runner's login (system) sits in the seed group SUPER: grant the import permission there, for the tests only
          (the test database holds seed data only - no FULLADMIN) -->

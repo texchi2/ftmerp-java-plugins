@@ -108,11 +108,12 @@
         title="FTM SKU Sheet Column" author="FTM Garments" version="1.0">
         <field name="sheetMapId"           type="id"/>
         <field name="columnSeq"            type="numeric"/>
-        <field name="keyHeader"            type="description"><description>VOCAB: header of the column whose values identify a feature (ProductFeature.description)</description></field>
+        <field name="keyHeader"            type="description"><description>VOCAB: header of the column whose values identify a feature (ProductFeature.description); ITEMS: the rule input (header) that valueOps apply to</description></field>
         <field name="codeHeader"           type="description"><description>VOCAB: header of the column holding the workbook's code for the key (optional)</description></field>
         <field name="nameHeader"           type="description"><description>VOCAB: header of a column shown beside the key, for a person (optional)</description></field>
         <field name="productFeatureTypeId" type="id"/>
         <field name="compareCode"          type="indicator"><description>Y: a differing workbook code is listed (VOCAB_CODE_DIFFERS); N: shown only, the master mints</description></field>
+        <field name="valueOps"             type="short-varchar"><description>ITEMS (v0.3): SkuComposer text ops applied to the cell text of the rule input named by keyHeader before matching, e.g. STRIP_UNIT|NUMBER for a Width written as 6.0 mm</description></field>
         <prim-key field="sheetMapId"/>
         <prim-key field="columnSeq"/>
         <relation type="one" fk-name="FTM_SKUCOL_MAP" rel-entity-name="FtmSkuSheetMap">
