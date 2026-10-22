@@ -25,6 +25,7 @@ import java.sql.Timestamp
 import org.apache.ofbiz.base.util.UtilDateTime
 import org.apache.ofbiz.entity.GenericValue
 import org.apache.ofbiz.ftm.garments.sku.SheetTable
+import org.apache.ofbiz.ftm.garments.sku.TableLookup
 import org.apache.ofbiz.ftm.garments.sku.WorkbookReader
 import org.apache.ofbiz.service.ServiceUtil
 
@@ -138,7 +139,13 @@ void classifyVocab(WorkbookReader reader, String sheetName, GenericValue map, Li
     for (GenericValue col in cols) {
         List<String> required = [col.keyHeader, col.codeHeader, col.nameHeader].findAll { Object h -> h } as List<String>
         mapped.addAll(required.collect { String h -> WorkbookReader.normalise(h) })
-        SheetTable table = reader.table(sheetName, required)
+        TableLookup lookup = reader.locate(sheetName, required)
+        if (lookup.problem) {
+            out << change('HEADER_AMBIGUOUS', 'ERROR', [sheetName: sheetName, header: required.join(' | '),
+                    productFeatureTypeId: col.productFeatureTypeId, reason: lookup.problem])
+            continue
+        }
+        SheetTable table = lookup.table
         if (table == null) {
             out << change('HEADER_MISSING', 'ERROR', [sheetName: sheetName, header: required.join(' | '),
                     productFeatureTypeId: col.productFeatureTypeId,
@@ -218,7 +225,12 @@ void classifyItems(WorkbookReader reader, String sheetName, GenericValue map, Li
     String codeHeader = map.codeHeader
     List<String> required = inputs + [codeHeader]
     Map common = [sheetName: sheetName, skuRuleId: ruleId, header: codeHeader]
-    SheetTable table = reader.table(sheetName, required)
+    TableLookup lookup = reader.locate(sheetName, required, codeHeader)
+    if (lookup.problem) {
+        out << change('HEADER_AMBIGUOUS', 'ERROR', common + [header: required.join(' | '), reason: lookup.problem])
+        return
+    }
+    SheetTable table = lookup.table
     if (table == null) {
         out << change('HEADER_MISSING', 'ERROR', common + [header: required.join(' | '),
                 reason: "no row within the first ${WorkbookReader.HEADER_SCAN_ROWS} carries all of: ${required.join(', ')}"])

@@ -86,24 +86,27 @@ final class WorkbookReader implements Closeable {
     }
 
     /**
-     * The table under the first row (within HEADER_SCAN_ROWS) carrying every required header; null when no row does.
-     * When a header repeats in that row, the first column wins.
+     * The table under the first row (within HEADER_SCAN_ROWS) carrying every required header. Headers are resolved by
+     * their text and never by picking one of several silently: with an anchor header (an item list's code column) every
+     * required header is taken from the contiguous run of header cells that holds the anchor; a header that repeats where
+     * it must be unique is reported as a problem instead (G2 2026-10-22: the 2024 list repeats its attribute names in a
+     * vocabulary block and in the generator block of the same row, and the first occurrence was the wrong one).
      */
-    SheetTable table(String sheetName, Collection<String> requiredHeaders) {
+    TableLookup locate(String sheetName, Collection<String> requiredHeaders, String anchorHeader = null) {
         Sheet sheet = workbook.getSheet(sheetName)
         if (sheet == null) {
-            return null
+            return new TableLookup(null, null)
         }
-        Set<String> wanted = requiredHeaders.collect { String h -> normalise(h) } as Set
+        List<String> wanted = requiredHeaders.collect { String h -> normalise(h) }.unique()
         int last = Math.min(sheet.lastRowNum, sheet.firstRowNum + HEADER_SCAN_ROWS)
         for (int r = sheet.firstRowNum; r <= last; r++) {
             Row row = sheet.getRow(r)
-            Map<String, String> written = row == null ? [:] : headersOf(row)
-            if (written.keySet().containsAll(wanted)) {
-                return new SheetTable(this, sheet, r, columnsOf(row), written)
+            Map<String, List<Integer>> found = row == null ? [:] : occurrencesOf(row)
+            if (found.keySet().containsAll(wanted)) {
+                return resolve(sheet, row, found, wanted, anchorHeader == null ? null : normalise(anchorHeader))
             }
         }
-        return null
+        return new TableLookup(null, null)
     }
 
     @Override
@@ -111,8 +114,65 @@ final class WorkbookReader implements Closeable {
         workbook.close()
     }
 
+    /** The required headers of a header row as columns: unique in the row, or unique inside the anchor's block. */
+    private TableLookup resolve(Sheet sheet, Row row, Map<String, List<Integer>> found, List<String> wanted, String anchor) {
+        Map<String, String> written = writtenOf(row)
+        Map<String, Integer> columns = found.collectEntries { String key, List<Integer> cols -> [(key): cols[0]] }
+        int excelRow = row.rowNum + 1
+        Range<Integer> block = null
+        if (anchor != null) {
+            List<Integer> anchors = found[anchor] ?: []
+            if (anchors.size() != 1) {
+                String name = written[anchor] ?: anchor
+                return new TableLookup(null, "the code header '${name}' appears ${anchors.size()} times in row ${excelRow}; it must be unique")
+            }
+            block = blockAround(row, anchors[0])
+        }
+        String where = anchor == null ? "in row ${excelRow}" : "inside the block of columns holding '${written[anchor]}' in row ${excelRow}"
+        List<String> problems = []
+        wanted.each { String key ->
+            List<Integer> cols = block == null ? found[key] : found[key].findAll { Integer c -> c in block }
+            if (cols.size() == 1) {
+                columns[key] = cols[0]
+            } else if (cols.empty) {
+                problems << "'${written[key]}' is not ${where}"
+            } else {
+                problems << "'${written[key]}' appears ${cols.size()} times ${where}"
+            }
+        }
+        if (problems) {
+            return new TableLookup(null, problems.join('; ') + ' - a header must name exactly one column')
+        }
+        return new TableLookup(new SheetTable(this, sheet, row.rowNum, columns, written), null)
+    }
+
+    /** The contiguous run of non-blank header cells around a column (the owner's tables are ListObjects without gaps). */
+    private Range<Integer> blockAround(Row row, int col) {
+        int lo = col
+        while (lo > 0 && normalise(cellText(row.getCell(lo - 1)))) {
+            lo--
+        }
+        int hi = col
+        while (normalise(cellText(row.getCell(hi + 1)))) {
+            hi++
+        }
+        return lo..hi
+    }
+
+    /** A row's non-blank cells as normalised header -> every column index carrying it, in column order. */
+    private Map<String, List<Integer>> occurrencesOf(Row row) {
+        Map<String, List<Integer>> found = [:]
+        for (Cell cell : row) {
+            String key = normalise(cellText(cell))
+            if (key) {
+                found.computeIfAbsent(key) { String k -> [] } << cell.columnIndex
+            }
+        }
+        return found
+    }
+
     /** A row's non-blank cells as normalised header -> header as written; the first cell carrying a header wins. */
-    private Map<String, String> headersOf(Row row) {
+    private Map<String, String> writtenOf(Row row) {
         Map<String, String> written = [:]
         for (Cell cell : row) {
             String text = cellText(cell)
@@ -122,18 +182,6 @@ final class WorkbookReader implements Closeable {
             }
         }
         return written
-    }
-
-    /** A row's non-blank cells as normalised header -> column index; the first cell carrying a header wins. */
-    private Map<String, Integer> columnsOf(Row row) {
-        Map<String, Integer> columns = [:]
-        for (Cell cell : row) {
-            String key = normalise(cellText(cell))
-            if (key && !columns.containsKey(key)) {
-                columns[key] = cell.columnIndex
-            }
-        }
-        return columns
     }
 
 }

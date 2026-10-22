@@ -65,7 +65,8 @@ class SkuImportWorkbookTests extends OFBizTestCase {
         // VOCAB_MASTER_ONLY is >= 1: other cases of this class add sizes the happy sheets never list (run order is not fixed)
         assert k.VOCAB_CODE_DIFFERS == 1 && k.VOCAB_MASTER_ONLY >= 1 && k.VOCAB_NEW == 1 : "vocabulary kinds: ${k}"
         assert k.ITEM_NEW == 1 && k.ITEM_SAME == 1 && k.ITEM_DISAGREES == 1 && k.ITEM_REFUSED == 1 : "item kinds: ${k}"
-        assert k.SHEET_UNMAPPED == 1 && !k.HEADER_MISSING && !k.COLUMN_UNMAPPED && !k.VOCAB_DUPLICATE_KEY : "structure kinds: ${k}"
+        assert k.SHEET_UNMAPPED == 1 && !k.HEADER_MISSING && !k.HEADER_AMBIGUOUS : "structure kinds: ${k}"
+        assert !k.COLUMN_UNMAPPED && !k.VOCAB_DUPLICATE_KEY : "structure kinds: ${k}"
         assert k.values().sum() == rows.size() && rows.size() == res.changeCount : 'a row is missing or counted twice'
         assert res.errorCount == 0 && res.applicableCount == 3 : "severities: ${res}"
         GenericValue differs = rows.find { GenericValue c -> c.kindId == 'VOCAB_CODE_DIFFERS' }
@@ -89,6 +90,47 @@ class SkuImportWorkbookTests extends OFBizTestCase {
         assert ServiceUtil.isSuccess(plain) && ServiceUtil.isSuccess(moved)
         assert moved.fingerprint == plain.fingerprint : 'a column found by its header gives the same differences wherever it sits'
         assert kinds(changes(moved.skuImportId as String)) == kinds(changes(plain.skuImportId as String))
+    }
+
+    void testItemsAreReadFromTheBlockHoldingTheCodeHeader() {
+        // the 2024 layout: a vocabulary block that repeats the item headers, a gap, then the item table with the code column
+        Map plain = preview(workbook(happySheets()))
+        Map<String, List<List<Object>>> left = happySheets()
+        left['Test Items'] = twoBlocks(decoyBlock(), null, left['Test Items'])
+        Map<String, List<List<Object>>> right = happySheets()
+        right['Test Items'] = twoBlocks(right['Test Items'], null, decoyBlock())
+        Map vocabLeft = preview(workbook(left))
+        Map vocabRight = preview(workbook(right))
+        assert ServiceUtil.isSuccess(vocabLeft) && ServiceUtil.isSuccess(vocabRight)
+        assert vocabLeft.fingerprint == plain.fingerprint : 'items come from the block holding the code header, not the first match'
+        assert vocabRight.fingerprint == plain.fingerprint : 'the same whichever side the decoy block sits'
+        assert kinds(changes(vocabLeft.skuImportId as String)) == kinds(changes(plain.skuImportId as String))
+    }
+
+    void testARepeatedHeaderIsAnErrorNotAGuess() {
+        Map before = counts()
+        Map<String, List<List<Object>>> sheets = happySheets()
+        // the key header twice (no gap, no anchor) and an input twice inside the code block
+        sheets['Test Colours'] = twoBlocks(sheets['Test Colours'], [], [['Colour'], ['Grey'], ['Grey'], ['Grey']])
+        sheets['Test Items'] = twoBlocks(sheets['Test Items'], [], [['Seq'], ['9'], ['9'], ['9'], ['9']])
+        Map res = preview(workbook(sheets))
+        assert ServiceUtil.isSuccess(res) : ServiceUtil.getErrorMessage(res)
+        List<GenericValue> rows = changes(res.skuImportId as String)
+        List<GenericValue> ambiguous = rows.findAll { GenericValue c -> c.kindId == 'HEADER_AMBIGUOUS' }
+        assert ambiguous.size() == 2 && ambiguous.every { GenericValue c -> c.severityId == 'ERROR' } : "ambiguous: ${ambiguous*.reason}"
+        assert ambiguous.find { GenericValue c -> c.sheetName == 'Test Colours' }.reason.contains("'Colour' appears 2 times")
+        assert ambiguous.find { GenericValue c -> c.sheetName == 'Test Items' }.reason.contains("'Seq' appears 2 times inside the block")
+        assert !rows.any { GenericValue c -> c.sheetName == 'Test Items' && c.kindId.startsWith('ITEM_') } : 'no item from a guessed column'
+        Map done = commit(res.skuImportId as String, res.fingerprint as String, seqsOf(rows) { GenericValue c -> c.severityId == 'APPLICABLE' })
+        assert ServiceUtil.isError(done) && ServiceUtil.getErrorMessage(done).startsWith('REFUSED: the preview holds errors')
+        // the code header itself twice: the anchor is not unique
+        Map<String, List<List<Object>>> twice = happySheets()
+        twice['Test Items'] = twoBlocks(twice['Test Items'], [], [['SKU'], ['X'], ['X'], ['X'], ['X']])
+        Map res2 = preview(workbook(twice))
+        GenericValue a2 = changes(res2.skuImportId as String).find { GenericValue c -> c.kindId == 'HEADER_AMBIGUOUS' }
+        assert a2 != null && a2.reason.contains("code header 'SKU' appears 2 times")
+        Map after = counts()
+        COUNTED.findAll { String e -> !e.startsWith('FtmSkuImport') }.each { String e -> assert after[e] == before[e] : "${e} changed" }
     }
 
     void testMissingHeaderIsAnErrorThatBlocksTheCommit() {
@@ -286,6 +328,22 @@ class SkuImportWorkbookTests extends OFBizTestCase {
     /** The same rows with their columns in another order (header row included), so only the header text can find them. */
     private static List<List<Object>> shuffled(List<List<Object>> rows, List<Integer> order) {
         return rows.collect { List<Object> r -> order.collect { int i -> i < r.size() ? r[i] : null } }
+    }
+
+    /** A vocabulary-looking block that repeats the item headers with misleading values (the 2024 "Trims Spec" block). */
+    private static List<List<Object>> decoyBlock() {
+        return [['Colour', 'Name', 'Seq', 'Note'], ['White', 'zzz', '0001', 'decoy'], ['White', 'zzz', '0002', 'decoy'],
+                ['White', 'zzz', '0003', 'decoy'], ['White', 'zzz', '0004', 'decoy']]
+    }
+
+    /** Two blocks side by side on the same rows; a null separator inserts one blank column between them. */
+    private static List<List<Object>> twoBlocks(List<List<Object>> a, List<List<Object>> separator, List<List<Object>> b) {
+        int rows = Math.max(a.size(), b.size())
+        return (0..<rows).collect { int r ->
+            List<Object> left = r < a.size() ? a[r] : (0..<a[0].size()).collect { null }
+            List<Object> right = r < b.size() ? b[r] : []
+            left + (separator == null ? [null] : []) + right
+        }
     }
 
     /** The happy workbook: every kind once, no error. */
