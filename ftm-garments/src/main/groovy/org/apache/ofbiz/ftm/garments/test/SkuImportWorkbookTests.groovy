@@ -43,7 +43,10 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook
  *    appliedBy nulled (audit); HEADER_MISSING downgraded to WARNING (missing header);
  *  - round 2, the other four red (153 tests, 5 errors): the ticks ignored (tick-only, and the audit case as a side effect);
  *    canMint() always true (non-numeric mint); VOCAB_DUPLICATE_KEY downgraded to WARNING (duplicate key); the cap raised to
- *    8 GB (size cap).
+ *    8 GB (size cap);
+ *  - v0.2 (2026-10-22, logs sku-lane/logs/mutant-v02-M1.log, -M2.log): M1 = a header resolved to its FIRST match, no block,
+ *    no ambiguity check -> exactly the two v0.2 cases red (block resolution, repeated header); M2 = the code-header anchor
+ *    ignored (block = null, row-wide uniqueness kept) -> the block-resolution case red (155 tests each round).
  */
 class SkuImportWorkbookTests extends OFBizTestCase {
 
