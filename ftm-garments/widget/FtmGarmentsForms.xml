@@ -71,7 +71,8 @@
             <submit button-type="button"/>
         </field>
         <field name="cancelButton" title="Cancel">
-            <submit button-type="button" target="FindStyles"/>
+            <!-- a submit posts THIS form (ConfirmDelete) whatever its target says - the widget schema drops that attribute; a link goes back -->
+            <hyperlink target="FindStyles" description="Cancel"/>
         </field>
     </form>
 
