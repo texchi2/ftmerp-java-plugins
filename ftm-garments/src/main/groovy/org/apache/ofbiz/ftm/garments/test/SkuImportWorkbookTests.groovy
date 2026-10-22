@@ -47,7 +47,9 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook
  *    8 GB (size cap);
  *  - v0.2 (2026-10-22, logs sku-lane/logs/mutant-v02-M1.log, -M2.log): M1 = a header resolved to its FIRST match, no block,
  *    no ambiguity check -> exactly the two v0.2 cases red (block resolution, repeated header); M2 = the code-header anchor
- *    ignored (block = null, row-wide uniqueness kept) -> the block-resolution case red (155 tests each round).
+ *    ignored (block = null, row-wide uniqueness kept) -> the block-resolution case red (155 tests each round);
+ *  - v0.3 (2026-10-22, logs mutant-v03-M3.log, -M4.log): M3 = cooked() returns the cell text unchanged -> the value-ops
+ *    case red; M4 = the ops check skipped (unknown op accepted) -> the unknown-op case red (161 tests each round).
  */
 class SkuImportWorkbookTests extends OFBizTestCase {
 
